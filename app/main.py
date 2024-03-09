@@ -5,6 +5,9 @@ from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.button import Button
 from kivy.uix.colorpicker import ColorPicker
 from kivy.uix.popup import Popup
+from kivy.uix.floatlayout import FloatLayout
+from app.shapes_widget import ShapesWidget
+from app.drawing_widget import DrawingWidget
 
 from app.drawing_widget import DrawingWidget
 
@@ -14,27 +17,50 @@ class ModeSwitchApp(App):
 
     def build(self):
         self.title = 'Mode Switch Paint with ColorPicker'
-        parent = BoxLayout(orientation='vertical')
-        self.painter = DrawingWidget()
+        self.root_layout = FloatLayout()
+        
+        self.drawing_widget = DrawingWidget()
+        self.shapes_widget = ShapesWidget()
+        
+        # Initialize control_panel before adding widgets to it
+        self.control_panel = BoxLayout(size_hint_y=None, height=50, orientation='horizontal')
+        self.setup_control_panel()  # Now control_panel exists and can be setup
 
-        # UI setup (button layout, clear button, etc.) as before
+        # Add widgets to the root_layout
+        self.root_layout.add_widget(self.shapes_widget)
+        self.root_layout.add_widget(self.drawing_widget)
+        self.root_layout.add_widget(self.control_panel)  # Add the control panel to the root layout
+        
+        # Manage the initial active mode
+        self.switch_mode_initial('drawing')
 
-        # ColorPicker button setup
-        color_picker_btn = Button(text='Pick Color', size_hint_y=None, height=50)
+        return self.root_layout
+    
+    def setup_control_panel(self):
+        # Setup the button layout including color picker, mode switch, and clear button
+        color_picker_btn = Button(text='Pick Color')
         color_picker_btn.bind(on_press=self.open_color_picker)
+        self.control_panel.add_widget(color_picker_btn)
+        
+        # Shape selection buttons
+        rectangle_btn = Button(text='Rectangle')
+        rectangle_btn.bind(on_press=lambda instance: self.set_shape_mode('rectangle'))
+        self.control_panel.add_widget(rectangle_btn)
 
-        # Assuming button_layout is a BoxLayout for buttons
-        button_layout = BoxLayout(size_hint_y=None, height=50)
-        button_layout.add_widget(color_picker_btn)
+        circle_btn = Button(text='Circle')
+        circle_btn.bind(on_press=lambda instance: self.set_shape_mode('circle'))
+        self.control_panel.add_widget(circle_btn)
 
-        clearbtn = Button(text='Clear')
-        clearbtn.bind(on_release=self.clear_canvas)
-        button_layout.add_widget(clearbtn)
-
-        parent.add_widget(self.painter)
-        parent.add_widget(button_layout)
-
-        return parent
+        # Mode switch button
+        mode_switch_btn = Button(text='Switch to Shapes')
+        mode_switch_btn.bind(on_press=self.switch_mode)
+        self.control_panel.add_widget(mode_switch_btn)
+        
+        # Clear canvas button
+        clear_btn = Button(text='Clear')
+        clear_btn.bind(on_release=self.clear_canvas)
+        self.control_panel.add_widget(clear_btn)
+        
 
     def open_color_picker(self, instance):
         color_picker = ColorPicker()
@@ -48,17 +74,49 @@ class ModeSwitchApp(App):
 
     def on_color_pick(self, instance, value):
         self.line_color = instance.color  # Update the app-level color
+        # Update the line_color for both widgets to the newly selected color
+        self.drawing_widget.line_color = self.line_color
+        self.shapes_widget.line_color = self.line_color
 
+    def set_shape_mode(self, shape):
+        self.current_mode = shape
+        self.shapes_widget.current_mode = shape  # Update ShapesWidget with the selected shape mode
+        
+        # Ensure that the ShapesWidget uses the current line color.
+        self.shapes_widget.line_color = self.line_color
+    
+    def switch_mode_initial(self, mode):
+        """A method to manage the initial mode setup without affecting the button text."""
+        self.current_mode = mode
+        if mode == 'drawing':
+            self.shapes_widget.disabled = True
+            self.drawing_widget.disabled = False
+            self.current_widget = self.drawing_widget
+        else:
+            self.shapes_widget.disabled = False
+            self.drawing_widget.disabled = True
+            self.current_widget = self.shapes_widget
+               
     def switch_mode(self, instance):
+        # Check the current mode and switch to the other mode
         if self.current_mode == 'drawing':
             self.current_mode = 'shapes'
+            self.drawing_widget.disabled = True  # Disable drawing widget to stop receiving touch events
+            self.shapes_widget.disabled = False  # Enable shapes widget to start receiving touch events
+            self.current_widget = self.shapes_widget
             instance.text = 'Switch to Drawing'
         else:
             self.current_mode = 'drawing'
+            self.shapes_widget.disabled = True  # Disable shapes widget to stop receiving touch events
+            self.drawing_widget.disabled = False  # Enable drawing widget to start receiving touch events
+            self.current_widget = self.drawing_widget
             instance.text = 'Switch to Shapes'
 
     def clear_canvas(self, instance):
-        self.painter.canvas.clear()
+        # self.current_widget.canvas.clear()
+        # Clear the canvas of both the drawing and shapes widgets
+        self.drawing_widget.canvas.clear()
+        self.shapes_widget.canvas.clear()
 
 if __name__ == '__main__':
     ModeSwitchApp().run()
