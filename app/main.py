@@ -42,14 +42,14 @@ class ModeSwitchApp(App):
         color_picker_btn.bind(on_press=self.open_color_picker)
         self.control_panel.add_widget(color_picker_btn)
         
-        # Shape selection buttons
-        rectangle_btn = Button(text='Rectangle')
-        rectangle_btn.bind(on_press=lambda instance: self.set_shape_mode('rectangle'))
-        self.control_panel.add_widget(rectangle_btn)
+        # Shape selection buttons initially hidden and disabled
+        self.rectangle_btn = Button(text='Rectangle', opacity=0, disabled=True)
+        self.rectangle_btn.bind(on_press=lambda instance: self.set_shape_mode('rectangle'))
+        self.control_panel.add_widget(self.rectangle_btn)
 
-        circle_btn = Button(text='Circle')
-        circle_btn.bind(on_press=lambda instance: self.set_shape_mode('circle'))
-        self.control_panel.add_widget(circle_btn)
+        self.circle_btn = Button(text='Circle', opacity=0, disabled=True)
+        self.circle_btn.bind(on_press=lambda instance: self.set_shape_mode('circle'))
+        self.control_panel.add_widget(self.circle_btn)
 
         # Mode switch button
         mode_switch_btn = Button(text='Switch to Shapes')
@@ -98,18 +98,23 @@ class ModeSwitchApp(App):
             self.current_widget = self.shapes_widget
                
     def switch_mode(self, instance):
-        # Check the current mode and switch to the other mode
         if self.current_mode == 'drawing':
             self.current_mode = 'shapes'
-            self.drawing_widget.disabled = True  # Disable drawing widget to stop receiving touch events
-            self.shapes_widget.disabled = False  # Enable shapes widget to start receiving touch events
-            self.current_widget = self.shapes_widget
+            self.drawing_widget.disabled = True  # Disable drawing widget
+            self.shapes_widget.disabled = False  # Enable shapes widget
+            self.rectangle_btn.disabled = False  # Enable rectangle button
+            self.rectangle_btn.opacity = 1       # Make rectangle button visible
+            self.circle_btn.disabled = False     # Enable circle button
+            self.circle_btn.opacity = 1           # Make circle button visible
             instance.text = 'Switch to Drawing'
         else:
             self.current_mode = 'drawing'
-            self.shapes_widget.disabled = True  # Disable shapes widget to stop receiving touch events
-            self.drawing_widget.disabled = False  # Enable drawing widget to start receiving touch events
-            self.current_widget = self.drawing_widget
+            self.drawing_widget.disabled = False  # Enable drawing widget
+            self.shapes_widget.disabled = True  # Disable shapes widget
+            self.rectangle_btn.disabled = True   # Disable rectangle button
+            self.rectangle_btn.opacity = 0       # Hide rectangle button
+            self.circle_btn.disabled = True     # Disable circle button
+            self.circle_btn.opacity = 0         # Hide circle button
             instance.text = 'Switch to Shapes'
 
     def clear_canvas(self, instance):
