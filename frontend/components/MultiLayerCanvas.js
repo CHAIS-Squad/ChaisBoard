@@ -5,9 +5,7 @@ import { Stage, Layer, Rect, Text } from 'react-konva';
 const Whiteboard = dynamic(() => import('../components/Whiteboard'), {
   ssr: false,
 });
-const DraggableShapes = dynamic(() => import('../components/DraggableShapes'), {
-  ssr: false,
-});
+const DraggableShapes = dynamic(() => import('../components/DraggableShapes'), { ssr: false });
 
 export default function MultiLayerCanvas() {
   

@@ -1,66 +1,69 @@
-import { useState } from 'react';
-import { Layer, Star, Circle, Rect, Text } from 'react-konva';
+import React, { useState } from 'react';
+import { Stage, Layer, Star, Text } from 'react-konva';
 
-export default function DraggableShapes() {
-  const [shapes, setShapes] = useState([]);
-  const [selectedShape, setSelectedShape] = useState('Rect');
-
-  const addShape = () => {
-    const newShape = {
-      id: shapes.length.toString(),
-      type: selectedShape,
-      x: Math.random() * window.innerWidth * 0.8, // Avoid adding shapes too close to the edge
-      y: Math.random() * window.innerHeight * 0.8,
-      rotation: Math.random() * 180,
-    };
-    setShapes([...shapes, newShape]);
-  };
-
-  const shapeComponents = shapes.map((shape) => {
-    if (shape.type === 'Star') {
-      return (
-        <Star
-          key={shape.id}
-          x={shape.x}
-          y={shape.y}
-          numPoints={5}
-          innerRadius={20}
-          outerRadius={40}
-          fill="#89b717"
-          draggable
-          rotation={shape.rotation}
-        />
-      );
-    } else if (shape.type === 'Rect') {
-      return (
-        <Rect
-          key={shape.id}
-          x={shape.x}
-          y={shape.y}
-          width={50}
-          height={50}
-          fill="#00D2FF"
-          draggable
-          rotation={shape.rotation}
-        />
-      );
-    }
-  });
-  return (
-    <>
-    <div style={{ position: 'absolute', top: 0, left: 0, zIndex: 10 }}>
-        <label>
-          Shape:
-          <select value={selectedShape} onChange={(e) => setSelectedShape(e.target.value)}>
-            <option value="Star">Star</option>
-            <option value="Rect">Rectangle</option>
-          </select>
-        </label>
-        <button onClick={addShape}>Add Shape</button>
-      </div>
-      <Layer>
-        {shapeComponents}
-      </Layer>
-    </>
-  )
+function generateShapes() {
+    return [...Array(10)].map((_, i) => ({
+        id: i.toString(),
+        x: Math.random() * window.innerWidth,
+        y: Math.random() * window.innerHeight,
+        rotation: Math.random() * 180,
+        isDragging: false,
+    }));
 }
+
+const DraggableStars = () => {
+    const [stars, setStars] = useState(generateShapes());
+
+    const handleDragStart = (e) => {
+        const id = e.target.id();
+        setStars(
+            stars.map((star) => ({
+                ...star,
+                isDragging: star.id === id,
+            }))
+        );
+    };
+
+    const handleDragEnd = (e) => {
+        setStars(
+            stars.map((star) => ({
+                ...star,
+                isDragging: false,
+            }))
+        );
+    };
+
+    return (
+        <Stage width={window.innerWidth} height={window.innerHeight}>
+            <Layer>
+                <Text text="Try to drag a star" fontSize={24} fill="#555" padding={20} />
+                {stars.map((star, index) => (
+                    <Star
+                        key={star.id}
+                        id={star.id}
+                        x={star.x}
+                        y={star.y}
+                        numPoints={5}
+                        innerRadius={20}
+                        outerRadius={40}
+                        fill="#89b717"
+                        opacity={0.8}
+                        draggable
+                        rotation={star.rotation}
+                        shadowColor="black"
+                        shadowBlur={10}
+                        shadowOpacity={0.6}
+                        shadowOffsetX={star.isDragging ? 10 : 5}
+                        shadowOffsetY={star.isDragging ? 10 : 5}
+                        scaleX={star.isDragging ? 1.2 : 1}
+                        scaleY={star.isDragging ? 1.2 : 1}
+                        onDragStart={handleDragStart}
+                        onDragEnd={handleDragEnd}
+                    />
+                ))}
+            </Layer>
+        </Stage>
+    );
+};
+
+export default DraggableStars;
