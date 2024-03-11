@@ -1,23 +1,51 @@
-import React from 'react';
+import React, { useState, useRef } from 'react';
+import { Stage } from 'react-konva';
 import dynamic from 'next/dynamic';
 
-import { Stage, Layer, Rect, Text } from 'react-konva';
-const Whiteboard = dynamic(() => import('../components/Whiteboard'), {
-  ssr: false,
-});
+const Whiteboard = dynamic(() => import('../components/Whiteboard'), { ssr: false });
 const DraggableShapes = dynamic(() => import('../components/DraggableShapes'), { ssr: false });
 
 export default function MultiLayerCanvas() {
-  
-    const width = 1000; // Example fixed size or could be based on state/window
-    const height = 800;
+    const [lines, setLines] = useState([]);
+    const isDrawing = useRef(false);
+
+    const handleMouseDown = (e) => {
+        // Check if the event target is the Stage to only start drawing if clicking on empty space
+        if (e.target === e.target.getStage()) {
+            isDrawing.current = true;
+            setLines([...lines, []]);
+        }
+    };
+
+    const handleMouseMove = (e) => {
+        if (!isDrawing.current) return;
+
+        const stage = e.target.getStage();
+        const point = stage.getPointerPosition();
+        let lastLine = lines[lines.length - 1];
+        if (lastLine) {
+            lastLine = [...lastLine, point.x, point.y];
+            setLines(lines.slice(0, -1).concat([lastLine]));
+        }
+    };
+
+    const handleMouseUp = () => {
+        isDrawing.current = false;
+    };
+
+    const width = window.innerWidth; // Consider using useState and useEffect for dynamic resizing
+    const height = window.innerHeight;
 
     return (
-      <div style={{ position: 'relative', width: width, height: height }}>
-        {/* First Canvas */}
-        <Whiteboard width={width} height={height} />
-        <DraggableShapes />
-      </div>
+        <Stage 
+            width={width} 
+            height={height} 
+            onMouseDown={handleMouseDown}
+            onMousemove={handleMouseMove}
+            onMouseup={handleMouseUp}
+        >
+            <Whiteboard lines={lines} />
+            <DraggableShapes />
+        </Stage>
     );
-  }
-
+}
