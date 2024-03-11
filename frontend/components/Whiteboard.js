@@ -1,90 +1,64 @@
 import dynamic from 'next/dynamic';
-import React, { Component } from 'react';
+import { Stage, Layer, Line, Rect, Text } from 'react-konva';
+import { useState, useEffect, useRef } from 'react';
 
-// Dynamically import Konva components with SSR disabled
-const Stage = dynamic(() => import('react-konva').then((mod) => mod.Stage), { ssr: false });
-const Layer = dynamic(() => import('react-konva').then((mod) => mod.Layer), { ssr: false });
-const Line = dynamic(() => import('react-konva').then((mod) => mod.Line), { ssr: false });
+export default function Whiteboard({ width, height }) {
+  const [lines, setLines] = useState([]);
+  const isDrawing = useRef(false);
 
-class Whiteboard extends Component {
-  constructor(props) {
-    super(props);
-    this.state = {
-      lines: [],
-      stageWidth: 1000,
-      stageHeight: 800,
+  useEffect(() => {
+    const updateDimensions = () => {
+      // Update state if necessary or perform any action on resize
     };
-    // Create a ref for the stage
-    this.stageRef = React.createRef();
-  }
 
-  componentDidMount() {
-    this.updateDimensions();
-    window.addEventListener('resize', this.updateDimensions);
-  }
+    window.addEventListener('resize', updateDimensions);
+    return () => window.removeEventListener('resize', updateDimensions);
+  }, []);
 
-  componentWillUnmount() {
-    window.removeEventListener('resize', this.updateDimensions);
-  }
-
-  updateDimensions = () => {
-    this.setState({
-      stageWidth: window.innerWidth,
-      stageHeight: window.innerHeight,
-    });
+  const handleMouseDown = (e) => {
+    isDrawing.current = true;
+    setLines([...lines, []]);
   };
 
-  handleMouseDown = (e) => {
-    this._drawing = true;
-    // Initialize a new line
-    this.setState(prevState => ({
-      lines: [...prevState.lines, []],
-    }));
+  const handleMouseMove = (e) => {
+    if (!isDrawing.current) return;
+
+    const stage = e.target.getStage();
+    const point = stage.getPointerPosition();
+    const newLines = lines.slice(0);
+    const currentLine = newLines[newLines.length - 1].concat([
+      point.x,
+      point.y,
+    ]);
+    newLines[newLines.length - 1] = currentLine;
+
+    setLines(newLines);
   };
 
-  handleMouseMove = (e) => {
-    // Check if we are currently drawing
-    if (!this._drawing) return;
-    
-    // Access the pointer position directly from the event
-    const point = e.target.getStage().getPointerPosition();
-    
-    // Proceed with adding the point to the current line
-    let lines = this.state.lines.slice(0);
-    let currentLine = lines[lines.length - 1];
-    currentLine = currentLine.concat([point.x, point.y]);
-    lines[lines.length - 1] = currentLine;
-  
-    this.setState({
-      lines,
-    });
-  };
-  
-
-  handleMouseUp = () => {
-    this._drawing = false;
+  const handleMouseUp = () => {
+    isDrawing.current = false;
   };
 
-  render() {
-    return (
-      <div>
-        <Stage
-          width={this.state.stageWidth}
-          height={this.state.stageHeight}
-          onMouseDown={this.handleMouseDown}
-          onMouseMove={this.handleMouseMove}
-          onMouseUp={this.handleMouseUp}
-          ref={this.stageRef}
-        >
-          <Layer>
-            {this.state.lines.map((line, i) => (
-              <Line key={i} points={line} stroke="black" strokeWidth={5} />
-            ))}
-          </Layer>
-        </Stage>
-      </div>
-    );
-  }
+  return (
+    <div>
+      <Stage
+        width={width || window.innerWidth}
+        height={height || window.innerHeight}
+        onMouseDown={handleMouseDown}
+        onMouseMove={handleMouseMove}
+        onMouseUp={handleMouseUp}
+      >
+        <Layer>
+          <Rect x={20} y={20} width={50} height={50} fill='red' />
+          {/* Existing lines drawing logic */}
+        </Layer>
+        <Layer>
+          {lines.map((line, i) => (
+            <Line key={i} points={line} stroke='black' strokeWidth={5} />
+          ))}
+        </Layer>
+        
+      </Stage>
+    </div>
+  );
 }
-
-export default Whiteboard;

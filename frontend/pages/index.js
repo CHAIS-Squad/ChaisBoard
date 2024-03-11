@@ -1,5 +1,9 @@
+'use client';
 import Head from 'next/head';
-import Whiteboard from '../components/Whiteboard'
+import dynamic from 'next/dynamic';
+const MultiLayerCanvas = dynamic(() => import('../components/MultiLayerCanvas'), {
+  ssr: false,
+});
 
 export default function Home() {
   return (
@@ -10,7 +14,7 @@ export default function Home() {
       </Head>
 
       <main>
-        <Whiteboard />
+        <MultiLayerCanvas />
       </main>
     </div>
   );
