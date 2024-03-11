@@ -1,65 +1,57 @@
-import React, { useState } from 'react';
-import { Stage, Layer, Star, Text } from 'react-konva';
+import React from 'react';
+import { Layer, Star, Circle, Rect, Text } from 'react-konva';
 
-function generateShapes() {
-  return [...Array(10)].map((_, i) => ({
-    id: i.toString(),
-    x: Math.random() * window.innerWidth,
-    y: Math.random() * window.innerHeight,
-    rotation: Math.random() * 180,
-    isDragging: false,
-  }));
-}
-
-export default function DraggableShapes() {
-  const [stars, setStars] = useState(generateShapes());
-
-  const handleDragStart = (e) => {
-    const id = e.target.id();
-    setStars(
-      stars.map((star) => ({
-        ...star,
-        isDragging: star.id === id,
-      }))
-    );
-  };
-
-  const handleDragEnd = (e) => {
-    setStars(
-      stars.map((star) => ({
-        ...star,
-        isDragging: false,
-      }))
-    );
-  };
-
+export default function DraggableShapes({ shapes, onDragStart, onDragEnd }) {
   return (
-    <Layer>
-      <Text text='Try to drag a star' fontSize={24} fill='#555' padding={20} />
-      {stars.map((star, index) => (
-        <Star
-          key={star.id}
-          id={star.id}
-          x={star.x}
-          y={star.y}
-          numPoints={5}
-          innerRadius={20}
-          outerRadius={40}
-          fill='#89b717'
-          opacity={0.8}
-          draggable
-          rotation={star.rotation}
-          shadowColor='black'
-          shadowBlur={10}
-          shadowOpacity={0.6}
-          shadowOffsetX={star.isDragging ? 10 : 5}
-          shadowOffsetY={star.isDragging ? 10 : 5}
-          scaleX={star.isDragging ? 1.2 : 1}
-          scaleY={star.isDragging ? 1.2 : 1}
-          onDragStart={handleDragStart}
-          onDragEnd={handleDragEnd}
-        />
-      ))}
-    </Layer>
+    <>
+      <Layer>
+        {shapes.map((shape) => {
+          const commonProps = {
+            key: shape.id,
+            id: shape.id,
+            x: shape.x,
+            y: shape.y,
+            rotation: shape.rotation,
+            draggable: true,
+            onDragStart: (e) => {
+              e.cancelBubble = true;
+              onDragStart(shape.id);
+            },
+            onDragEnd: (e) => {
+              e.cancelBubble = true;
+              onDragEnd(shape.id, { x: e.target.x(), y: e.target.y() });
+            },
+            scaleX: shape.isDragging ? 1.2 : 1,
+            scaleY: shape.isDragging ? 1.2 : 1,
+            shadowOffsetX: shape.isDragging ? 10 : 5,
+            shadowOffsetY: shape.isDragging ? 10 : 5,
+            shadowBlur: 10,
+            shadowOpacity: 0.6,
+          };
+
+          switch (shape.shapeType) {
+            case 'Star':
+              return (
+                <Star
+                  {...commonProps}
+                  numPoints={5}
+                  innerRadius={20}
+                  outerRadius={40}
+                  fill='#89b717'
+                />
+              );
+            case 'Circle':
+              return <Circle {...commonProps} radius={30} fill='#007bff' />;
+            case 'Rect':
+              return (
+                <Rect {...commonProps} width={50} height={50} fill='#dc3545' />
+              );
+            default:
+              console.log('Unknown shape type:', shape.shapeType); // This helps identify if the shapeType is not what you expect
+              return null;
+          }
+        })}
+      </Layer>
+    </>
   );
 }
