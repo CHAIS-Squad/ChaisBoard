@@ -1,0 +1,29 @@
+/* styles/YourPage.module.css */
+
+.container {
+  display: flex;
+  height: 100vh; /* Full height of the viewport */
+  width: 100vw;
+}
+
+.sidebar {
+  width: 80px; /* Adjust the width of the sidebar as needed */
+  background-color: #f0f0f0;
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.button {
+  margin-bottom: 10px;
+}
+
+.canvasContainer {
+  flex: 1; /* Take up the remaining space in the container */
+  overflow: hidden; /* Ensure the canvas doesn't overflow */
+}
+
+.canvas {
+
+}
