@@ -21,8 +21,11 @@ export default function MultiLayerCanvas() {
   const [history, setHistory] = useState([...shapes]);
   const [historyStep, setHistoryStep] = useState(0);
   const [texts, setTexts] = useState([
-    { id: 'text1', position: { x: 50, y: 50 }, isDragging: false },
+    { id: 'text1', position: { x: 50, y: 50 }, text: 'Drag me!', isDragging: false, isEditing: false },
   ]);
+  
+  const [isEditing, setIsEditing] = useState(false);
+  const [inputValue, setInputValue] = useState('Drag me!');
 
   useEffect(() => {
     const handleKeyDown = (e) => {
@@ -155,6 +158,19 @@ export default function MultiLayerCanvas() {
     }
 };
 
+const handleDoubleClick = (e) => {
+  setIsEditing(true);
+  // Positioning for the input element
+  const stageBox = e.target.getStage().container().getBoundingClientRect();
+  const textPosition = e.target.absolutePosition();
+  const inputPosition = {
+    top: stageBox.top + textPosition.y,
+    left: stageBox.left + textPosition.x,
+  };
+  // You can then position your input element using inputPosition
+};
+
+
 
   return (
     <>
@@ -186,7 +202,8 @@ export default function MultiLayerCanvas() {
           position={text.position}
           isDragging={text.isDragging}
           onDragStart={() => handleTextDragStart(text.id)}
-          onDragEnd={(e) => handleTextDragEnd(text.id, e)} // Pass the event object to handleTextDragEnd
+          onDragEnd={(e) => handleTextDragEnd(text.id, e)}
+          onDblClick={handleDoubleClick}
       />
         ))}
       </Stage>
