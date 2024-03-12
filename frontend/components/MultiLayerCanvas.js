@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Stage, Rect, Circle, Star } from 'react-konva';
 import dynamic from 'next/dynamic';
+import Sidebar from './Sidebar';
 
 const Whiteboard = dynamic(() => import('../components/Whiteboard'), {
   ssr: false,
@@ -21,11 +22,11 @@ export default function MultiLayerCanvas() {
     const handleKeyDown = (e) => {
       if ((e.ctrlKey || e.metaKey) && e.key === 'z') {
         e.preventDefault();
-        undo();
+        handleUndo();
       }
       else if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === 'z') {
         e.preventDefault();
-        redo();
+        handleRedo();
       }
     };
 
@@ -124,19 +125,13 @@ export default function MultiLayerCanvas() {
 
   return (
     <>
-      <div style={{ position: 'absolute', zIndex: 1 }}>
-        <select
-          onChange={(e) => setSelectedShape(e.target.value)}
-          value={selectedShape}
-        >
-          <option value='Star'>Star</option>
-          <option value='Circle'>Circle</option>
-          <option value='Rect'>Rectangle</option>
-        </select>
-        <button onClick={addShape}>Add Shape</button>
-        <button onClick={handleUndo}>Undo</button>
-        <button onClick={handleRedo}>Redo</button>
-      </div>
+      <Sidebar
+        selectedShape={selectedShape}
+        setSelectedShape={setSelectedShape}
+        addShape={addShape}
+        handleUndo={handleUndo}
+        handleRedo={handleRedo}
+      />
 
       <Stage
         width={width}
