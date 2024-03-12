@@ -12,43 +12,53 @@ export default function TextEditor({
   editing,
   onDoubleClick,
 }) {
-  // Handle text change in input field and update the state
-  const handleInputChange = (event) => {
-    onUpdate(id, event.target.value);
-  };
+
+  useEffect(() => {
+    if (editing) {
+      // Creating a text area outside of canvas to allow for html elements
+      const textarea = document.createElement('textarea');
+      document.body.appendChild(textarea);
+
+      // Defaults for text area
+      // Places the text area on top of the text to give off illusion of changing the text.
+      textarea.value = text;
+      textarea.style.position = 'absolute';
+      textarea.style.top = `${position.y}px`;
+      textarea.style.left = `${position.x}px`;
+      textarea.style.width = 'auto'; // Can adjust all these down for different stylings of text editor
+      textarea.style.height = 'auto'; 
+      textarea.style.fontSize = '16px'; 
+
+      textarea.focus();
+
+      // Handles entering edits
+      // Currently requires enter key to post edit.
+      textarea.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+          onUpdate(id, textarea.value);
+          // Removes text area upon enter to give illusion of base text changing directly.
+          document.body.removeChild(textarea);
+        }
+      });
+      return () => {
+        if (document.body.contains(textarea)) {
+          document.body.removeChild(textarea);
+        }
+      };
+    }
+  }, [editing]);
 
   return (
-    <Layer>
-      {editing ? (
-        <Group>
-          <Text
-            x={position.x}
-            y={position.y}
-            text=""
-            draggable
-            onDragStart={onDragStart}
-            onDragEnd={onDragEnd}
-            onDblClick={onDoubleClick}
-          />
-          <input
-            type="text"
-            value={text}
-            style={{ position: 'absolute', left: position.x, top: position.y }}
-            onChange={handleInputChange}
-            onDoubleClick={onDoubleClick}
-          />
-        </Group>
-      ) : (
-        <Text
-          x={position.x}
-          y={position.y}
-          text={text}
-          draggable
-          onDragStart={onDragStart}
-          onDragEnd={onDragEnd}
-          onDblClick={onDoubleClick}
-        />
-      )}
-    </Layer>
+    <Group>
+      <Text
+        x={position.x}
+        y={position.y}
+        text={editing ? '' : text}
+        draggable
+        onDragStart={editing ? null : onDragStart}
+        onDragEnd={editing ? null : onDragEnd}
+        onDblClick={onDoubleClick}
+      />
+    </Group>
   );
 }
