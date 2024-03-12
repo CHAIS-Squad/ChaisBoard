@@ -12,6 +12,9 @@ const DraggableShapes = dynamic(() => import('../components/DraggableShapes'), {
 const DraggableText = dynamic(() => import('../components/DraggableText'), {
   ssr: false,
 });
+const TextEditor = dynamic(() => import('../components/TextEditor'), {
+  ssr: false,
+});
 
 export default function MultiLayerCanvas() {
   const [lines, setLines] = useState([]);
@@ -194,7 +197,7 @@ export default function MultiLayerCanvas() {
           onDragEnd={handleDragEnd}
         />
         {texts.map((text) => (
-          <DraggableText
+          <TextEditor
             key={text.id}
             text={text.text}
             position={text.position}
