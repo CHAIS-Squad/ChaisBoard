@@ -1,6 +1,13 @@
 import React from 'react';
+import getCanvasTemplates from '@/api/canvas-templates';
 
-const Sidebar = ({ selectedShape, setSelectedShape, addShape, handleUndo, handleRedo, onSave, onAdd}) => {
+function Sidebar({ selectedShape, setSelectedShape, addShape, handleUndo, handleRedo, onSave, onAdd, addTemplate}) {
+  function handleTemplateSubmit(event) {
+    event.preventDefault();
+    const templateObjects = getCanvasTemplates(event.target.templateSelector.value);
+    addTemplate(templateObjects);
+  }
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', position: 'fixed', top: 0, left: 0, height: '100%', padding: '20px', background: '#fff', boxShadow: '0 0 10px rgba(0,0,0,0.1)', zIndex: 1000 }}>
       <select onChange={(e) => setSelectedShape(e.target.value)} value={selectedShape} style={{ marginBottom: '10px' }}>
@@ -13,6 +20,15 @@ const Sidebar = ({ selectedShape, setSelectedShape, addShape, handleUndo, handle
       <button onClick={handleRedo}>Redo</button>
       <button onClick={onSave}>Save</button>
       <button onClick={onAdd}>Load</button>
+      
+      <form onSubmit={handleTemplateSubmit} className='flex flex-col'>
+        <label htmlFor="templateSelector">Import a template:</label>
+        <select name="templateSelector" id="templateSelector">
+          <option value="linked_list">Linked List</option>
+          <option value="stack">Stack</option>
+        </select>
+        <button type='submit'>Add Template</button>
+      </form>
     </div>
   );
 };
