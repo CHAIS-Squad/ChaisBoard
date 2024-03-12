@@ -205,13 +205,9 @@ export default function MultiLayerCanvas() {
         width={width}
         height={height}
         onMouseDown={handleMouseDown}
-        onMouseMove={handleMouseMove} // Corrected casing
-        onMouseUp={handleMouseUp} // Corrected casing
+        onMouseMove={handleMouseMove} 
+        onMouseUp={handleMouseUp}
       >
-        <Layer>
-          <Text text='Static test' x={10} y={10} />
-          {/* Your dynamic DraggableText components */}
-        </Layer>
         <Whiteboard lines={lines} />
         <DraggableShapes
           shapes={shapes}
@@ -219,7 +215,7 @@ export default function MultiLayerCanvas() {
           onDragEnd={handleDragEnd}
         />
         {texts.map((text) => (
-          <Layer>
+          <Layer key={text.id}>
             <TextEditor
               id={text.id}
               text={text.text}
