@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Stage, Rect, Circle, Star } from 'react-konva';
 import dynamic from 'next/dynamic';
 
@@ -14,12 +14,34 @@ export default function MultiLayerCanvas() {
   const [shapes, setShapes] = useState([]);
   const [selectedShape, setSelectedShape] = useState('Rect');
   const isDrawing = useRef(false);
+  const [history, setHistory] = useState([...shapes]);
+  const [historyStep, setHistoryStep] = useState(0);
+
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'z') {
+        e.preventDefault();
+        undo();
+      }
+      else if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === 'z') {
+        e.preventDefault();
+        redo();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [lines, shapes]);
 
   const handleMouseDown = (e) => {
     // Check if the event target is the Stage to only start drawing if clicking on empty space
     if (e.target === e.target.getStage()) {
       isDrawing.current = true;
-      setLines([...lines, []]);
+      setLines((prevLines) => [...prevLines, []]);
+      saveHistory();
     }
   };
 
@@ -49,9 +71,31 @@ export default function MultiLayerCanvas() {
       rotation: Math.random() * 180,
       isDragging: false, // Initial dragging state is false
     };
-    setShapes([...shapes, newShape]);
+    setShapes((prevShapes) => [...prevShapes, newShape]);
+    saveHistory();
   };
   
+  const saveHistory = () => {
+    const newHistory = history.slice(0, historyStep + 1);
+    setHistory([...newHistory, { lines, shapes }]);
+    setHistoryStep(historyStep + 1);
+  };
+
+  const handleUndo = () => {
+    if (historyStep > 0) {
+      setHistoryStep(historyStep - 1);
+      setShapes(history[historyStep - 1].shapes);
+      setLines(history[historyStep - 1].lines);
+    }
+  };
+  
+  const handleRedo = () => {
+    if (historyStep < history.length - 1) {
+      setHistoryStep(historyStep + 1);
+      setShapes(history[historyStep + 1].shapes);
+      setLines(history[historyStep + 1].lines);
+    }
+  };
 
   const width = window.innerWidth; // Consider using useState and useEffect for dynamic resizing
   const height = window.innerHeight;
@@ -64,6 +108,7 @@ export default function MultiLayerCanvas() {
       return shape;
     });
     setShapes(updatedShapes);
+    saveHistory();
   };
 
   const handleDragEnd = (shapeId, newPos) => {
@@ -74,6 +119,7 @@ export default function MultiLayerCanvas() {
       return shape;
     });
     setShapes(updatedShapes);
+    saveHistory();
   };
 
   return (
@@ -88,6 +134,8 @@ export default function MultiLayerCanvas() {
           <option value='Rect'>Rectangle</option>
         </select>
         <button onClick={addShape}>Add Shape</button>
+        <button onClick={handleUndo}>Undo</button>
+        <button onClick={handleRedo}>Redo</button>
       </div>
 
       <Stage
