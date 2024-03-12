@@ -23,10 +23,7 @@ export default function MultiLayerCanvas() {
   const isDrawing = useRef(false);
   const [history, setHistory] = useState([...shapes]);
   const [historyStep, setHistoryStep] = useState(0);
-  const [texts, setTexts] = useState([
-    { id: 'text1', position: { x: 210, y: 50 }, text: 'Drag me!', isDragging: false },
-  ]);
-  
+  const [texts, setTexts] = useState([]);
 
   // console.log('Current texts state:', texts);
   // console.log('Current selectedShape state:', selectedShape);
@@ -171,7 +168,6 @@ export default function MultiLayerCanvas() {
 
   const handleTextDoubleClick = (textId) => {
     const updatedTexts = texts.map((text) => {
-      
       if (text.id === textId) {
         return { ...text, isEditing: true };
       }
@@ -188,7 +184,19 @@ export default function MultiLayerCanvas() {
       return text;
     });
     setTexts(updatedTexts);
-    saveHistory(); 
+    saveHistory();
+  };
+
+  const addText = () => {
+    const newText = {
+      id: `text-${texts.length}`, // Ensuring each text has a unique ID
+      position: { x: 200, y: texts.length * 20 + 100 },
+      text: 'New Text',
+      isDragging: false,
+      isEditing: false,
+    };
+    setTexts((prevTexts) => [...prevTexts, newText]);
+    saveHistory();
   };
 
   return (
@@ -199,13 +207,14 @@ export default function MultiLayerCanvas() {
         addShape={addShape}
         handleUndo={handleUndo}
         handleRedo={handleRedo}
+        addText={addText}
       />
 
       <Stage
         width={width}
         height={height}
         onMouseDown={handleMouseDown}
-        onMouseMove={handleMouseMove} 
+        onMouseMove={handleMouseMove}
         onMouseUp={handleMouseUp}
       >
         <Whiteboard lines={lines} />
