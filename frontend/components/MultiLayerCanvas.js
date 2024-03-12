@@ -20,9 +20,8 @@ const DrawBlock = dynamic(() => import('../components/DrawBlock'), {
 export default function MultiLayerCanvas() {
   const [lines, setLines] = useState([]);
   const [shapes, setShapes] = useState([]);
-  const [drawBlocks, setDrawBlocks] = useState([
-    { id: 'draw1,'}
-  ]);
+  const [blocks, setBlocks] = useState([  ]);
+  const [block1Lines, setBlock1Lines] = useState([]);
   const [selectedShape, setSelectedShape] = useState('Rect');
   const isDrawing = useRef(false);
   const [history, setHistory] = useState([...shapes]);
@@ -30,10 +29,10 @@ export default function MultiLayerCanvas() {
   const [texts, setTexts] = useState([
     { id: 'text1', position: { x: 210, y: 50 }, text: 'Drag me!', isDragging: false },
   ]);
-  
 
-  console.log('Current texts state:', texts);
-  console.log('Current selectedShape state:', selectedShape);
+
+  // console.log('Current texts state:', texts);
+  // console.log('Current selectedShape state:', selectedShape);
 
   useEffect(() => {
     const handleKeyDown = (e) => {
@@ -183,7 +182,7 @@ export default function MultiLayerCanvas() {
   const handleVisualClick = () => {
     const newDrawBlock = {
       id: `drawBlock-${drawBlocks.length + 1}`,
-      position: { x: window.innerWidth / 2, y: window.innerHeight / 2 }, // Centered position
+      position: { x: window.innerWidth / 2, y: window.innerHeight / 2 },
     };
     setDrawBlocks([...drawBlocks, newDrawBlock]);
     saveHistory();
@@ -231,11 +230,25 @@ export default function MultiLayerCanvas() {
       >
         <Layer>
           <Text text='Static test' x={10} y={10} />
-          
+
         </Layer>
-        <Whiteboard lines={lines} />
+        <Layer>
+          <Whiteboard lines={lines} />
+        </Layer>
+
         {/* <DrawBlock /> */}
-        <DrawBlock />
+        {blocks.map((block) => (
+          <DrawBlock
+            key={block.id}
+            id={block.id}
+            position={block.position}
+            lines={block.lines}
+            // ... other props if needed
+            onCreate={handleCreateNewBlock} // Pass the function as onCreate prop
+            onDragStart={handleDragStart}
+            onDragEnd={handleDragEnd}
+          />
+        ))}
         <DraggableShapes
           shapes={shapes}
           onDragStart={handleDragStart}
