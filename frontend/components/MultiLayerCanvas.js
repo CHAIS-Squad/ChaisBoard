@@ -170,6 +170,18 @@ export default function MultiLayerCanvas() {
     console.log(shapes[0]);
   }
 
+  function loadShape() {
+    const newShape = {
+      "id": "Rect-0",
+      "shapeType": "Rect",
+      "x": 210,
+      "y": 225.49816409868518,
+      "rotation": 117.50656501577862,
+      "isDragging": false
+    }
+    setShapes([...shapes, newShape])
+  }
+
   return (
     <>
       <Sidebar
@@ -179,6 +191,7 @@ export default function MultiLayerCanvas() {
         handleUndo={handleUndo}
         handleRedo={handleRedo}
         onSave={saveShapes}
+        onAdd={loadShape}
       />
 
       <Stage
