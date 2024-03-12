@@ -28,8 +28,8 @@ export default function MultiLayerCanvas() {
   ]);
   
 
-  console.log('Current texts state:', texts);
-  console.log('Current selectedShape state:', selectedShape);
+  // console.log('Current texts state:', texts);
+  // console.log('Current selectedShape state:', selectedShape);
 
   useEffect(() => {
     const handleKeyDown = (e) => {
@@ -169,6 +169,28 @@ export default function MultiLayerCanvas() {
     }
   };
 
+  const handleTextDoubleClick = (textId) => {
+    const updatedTexts = texts.map((text) => {
+      
+      if (text.id === textId) {
+        return { ...text, isEditing: true };
+      }
+      return text;
+    });
+    setTexts(updatedTexts);
+  };
+
+  const handleTextUpdate = (textId, newText) => {
+    const updatedTexts = texts.map((text) => {
+      if (text.id === textId) {
+        return { ...text, text: newText, isEditing: false };
+      }
+      return text;
+    });
+    setTexts(updatedTexts);
+    saveHistory(); 
+  };
+
   return (
     <>
       <Sidebar
@@ -197,14 +219,19 @@ export default function MultiLayerCanvas() {
           onDragEnd={handleDragEnd}
         />
         {texts.map((text) => (
-          <TextEditor
-            key={text.id}
-            text={text.text}
-            position={text.position}
-            isDragging={text.isDragging}
-            onDragStart={() => handleTextDragStart(text.id)}
-            onDragEnd={(e) => handleTextDragEnd(text.id, e)}
-          />
+          <Layer>
+            <TextEditor
+              id={text.id}
+              text={text.text}
+              position={text.position}
+              isDragging={text.isDragging}
+              editing={text.isEditing}
+              onDragStart={() => handleTextDragStart(text.id)}
+              onDragEnd={(e) => handleTextDragEnd(text.id, e)}
+              onDoubleClick={() => handleTextDoubleClick(text.id)}
+              onUpdate={(id, newText) => handleTextUpdate(id, newText)}
+            />
+          </Layer>
         ))}
       </Stage>
     </>
