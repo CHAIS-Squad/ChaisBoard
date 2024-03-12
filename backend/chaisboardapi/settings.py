@@ -37,11 +37,11 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-
-
-
+    # dependencies
+    'rest_framework',
+    # API
     'cba_app',
-
+    'canvas_templates',
 ]
 
 MIDDLEWARE = [
