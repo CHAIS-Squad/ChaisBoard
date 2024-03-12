@@ -166,6 +166,10 @@ export default function MultiLayerCanvas() {
     }
   };
 
+  function saveShapes() {
+    console.log(shapes[0]);
+  }
+
   return (
     <>
       <Sidebar
@@ -174,6 +178,7 @@ export default function MultiLayerCanvas() {
         addShape={addShape}
         handleUndo={handleUndo}
         handleRedo={handleRedo}
+        onSave={saveShapes}
       />
 
       <Stage
