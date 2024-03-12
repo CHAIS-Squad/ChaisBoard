@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Stage, Layer, Text, Rect, Circle, Star } from 'react-konva';
 import dynamic from 'next/dynamic';
 import Sidebar from './Sidebar';
+// import DrawBlock from './DrawBlock';
 
 const Whiteboard = dynamic(() => import('../components/Whiteboard'), {
   ssr: false,
@@ -12,10 +13,16 @@ const DraggableShapes = dynamic(() => import('../components/DraggableShapes'), {
 const DraggableText = dynamic(() => import('../components/DraggableText'), {
   ssr: false,
 });
+const DrawBlock = dynamic(() => import('../components/DrawBlock'), {
+  ssr: false,
+});
 
 export default function MultiLayerCanvas() {
   const [lines, setLines] = useState([]);
   const [shapes, setShapes] = useState([]);
+  const [drawBlocks, setDrawBlocks] = useState([
+    { id: 'draw1,'}
+  ]);
   const [selectedShape, setSelectedShape] = useState('Rect');
   const isDrawing = useRef(false);
   const [history, setHistory] = useState([...shapes]);
@@ -143,7 +150,6 @@ export default function MultiLayerCanvas() {
   };
 
   const handleTextDragEnd = (textId, e) => {
-    // Ensure e.target is defined and has .x() and .y() methods
     if (
       e.target &&
       typeof e.target.x === 'function' &&
@@ -151,7 +157,6 @@ export default function MultiLayerCanvas() {
     ) {
       const updatedTexts = texts.map((text) => {
         if (text.id === textId) {
-          // Use e.target.x() and e.target.y() to get the new position
           return {
             ...text,
             position: { x: e.target.x(), y: e.target.y() },
@@ -166,6 +171,43 @@ export default function MultiLayerCanvas() {
     }
   };
 
+  // const handleVisualClick = () => {
+  //   const newDrawBlock = {
+  //     id: `drawBlock-${drawBlocks.length + 1}`,
+  //     position: { x: Math.random() * window.innerWidth * 0.8, y: Math.random() * window.innerHeight * 0.8 },
+  //   };
+  //   setDrawBlocks([...drawBlocks, newDrawBlock]);
+  //   saveHistory();
+  // };
+
+  const handleVisualClick = () => {
+    const newDrawBlock = {
+      id: `drawBlock-${drawBlocks.length + 1}`,
+      position: { x: window.innerWidth / 2, y: window.innerHeight / 2 }, // Centered position
+    };
+    setDrawBlocks([...drawBlocks, newDrawBlock]);
+    saveHistory();
+  };
+
+  const handleVisualDragStart = (e) => {
+    e.dataTransfer.setData('drawBlock', 'Block');
+  };
+
+  const handleVisualDrop = (e) => {
+    e.preventDefault();
+    const draggedItem = e.dataTransfer.getData('drawBlock');
+    if (draggedItem === 'Block') {
+      const newDrawBlock = {
+        id: `drawBlock-${drawBlocks.length + 1}`,
+        position: { x: e.clientX, y: e.clientY },
+      };
+      setDrawBlocks([...drawBlocks, newDrawBlock]);
+      saveHistory();
+    }
+  };
+
+
+
   return (
     <>
       <Sidebar
@@ -174,6 +216,8 @@ export default function MultiLayerCanvas() {
         addShape={addShape}
         handleUndo={handleUndo}
         handleRedo={handleRedo}
+        drawClick={handleVisualClick}
+        drawDrag={handleVisualDragStart}
       />
 
       <Stage
@@ -182,17 +226,22 @@ export default function MultiLayerCanvas() {
         onMouseDown={handleMouseDown}
         onMouseMove={handleMouseMove} // Corrected casing
         onMouseUp={handleMouseUp} // Corrected casing
+        onVisualDrop={handleVisualDrop}
+        onDrag={(e) => e.preventDefault()}
       >
         <Layer>
           <Text text='Static test' x={10} y={10} />
-          {/* Your dynamic DraggableText components */}
+          
         </Layer>
         <Whiteboard lines={lines} />
+        {/* <DrawBlock /> */}
+        <DrawBlock />
         <DraggableShapes
           shapes={shapes}
           onDragStart={handleDragStart}
           onDragEnd={handleDragEnd}
         />
+
         {texts.map((text) => (
           <DraggableText
             key={text.id}
