@@ -9,6 +9,9 @@ const Whiteboard = dynamic(() => import('../components/Whiteboard'), {
 const DraggableShapes = dynamic(() => import('../components/DraggableShapes'), {
   ssr: false,
 });
+const DraggableText = dynamic(() => import('../components/DraggableText'), {
+  ssr: false,
+});
 
 export default function MultiLayerCanvas() {
   const [lines, setLines] = useState([]);
@@ -17,6 +20,9 @@ export default function MultiLayerCanvas() {
   const isDrawing = useRef(false);
   const [history, setHistory] = useState([...shapes]);
   const [historyStep, setHistoryStep] = useState(0);
+  const [texts, setTexts] = useState([
+    { id: 'text1', position: { x: 50, y: 50 }, isDragging: false },
+  ]);
 
   useEffect(() => {
     const handleKeyDown = (e) => {
@@ -75,7 +81,7 @@ export default function MultiLayerCanvas() {
     setShapes((prevShapes) => [...prevShapes, newShape]);
     saveHistory();
   };
-  
+
   const saveHistory = () => {
     const newHistory = history.slice(0, historyStep + 1);
     setHistory([...newHistory, { lines, shapes }]);
@@ -89,7 +95,7 @@ export default function MultiLayerCanvas() {
       setLines(history[historyStep - 1].lines);
     }
   };
-  
+
   const handleRedo = () => {
     if (historyStep < history.length - 1) {
       setHistoryStep(historyStep + 1);
@@ -123,6 +129,33 @@ export default function MultiLayerCanvas() {
     saveHistory();
   };
 
+  const handleTextDragStart = (textId) => {
+    const updatedTexts = texts.map((text) => {
+      if (text.id === textId) {
+        return { ...text, isDragging: true };
+      }
+      return text;
+    });
+    setTexts(updatedTexts);
+  };
+
+  const handleTextDragEnd = (textId, e) => {
+    // Ensure e.target is defined and has .x() and .y() methods
+    if (e.target && typeof e.target.x === 'function' && typeof e.target.y === 'function') {
+        const updatedTexts = texts.map((text) => {
+            if (text.id === textId) {
+                // Use e.target.x() and e.target.y() to get the new position
+                return { ...text, position: { x: e.target.x(), y: e.target.y() }, isDragging: false };
+            }
+            return text;
+        });
+        setTexts(updatedTexts);
+    } else {
+        console.error('Unexpected event target:', e.target);
+    }
+};
+
+
   return (
     <>
       <Sidebar
@@ -146,6 +179,16 @@ export default function MultiLayerCanvas() {
           onDragStart={handleDragStart}
           onDragEnd={handleDragEnd}
         />
+        {texts.map((text) => (
+          <DraggableText
+          key={text.id}
+          text="Drag me!"
+          position={text.position}
+          isDragging={text.isDragging}
+          onDragStart={() => handleTextDragStart(text.id)}
+          onDragEnd={(e) => handleTextDragEnd(text.id, e)} // Pass the event object to handleTextDragEnd
+      />
+        ))}
       </Stage>
     </>
   );
