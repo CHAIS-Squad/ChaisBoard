@@ -26,7 +26,21 @@ function useCanvasTemplates() {
     }
   }
 
-  return { getCanvasTemplate, getCanvasTemplatesList };
+  async function createCanvasTemplate(newTemplate) {
+    try {
+      const response = await fetch(`${apiUrl}/create/`, {
+        method: "POST",
+        body: JSON.stringify(newTemplate),
+        ...options,
+      });
+      const data = await response.json();
+      return data;
+    } catch (error) {
+      handleError(error);
+    }
+  }
+
+  return { getCanvasTemplate, getCanvasTemplatesList, createCanvasTemplate };
 }
 
 function handleError(error) {

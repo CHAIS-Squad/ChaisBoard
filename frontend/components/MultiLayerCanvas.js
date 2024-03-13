@@ -199,15 +199,22 @@ export default function MultiLayerCanvas() {
     saveHistory();
   };
   
-   // import canvas template
+  // import canvas template
   function importTemplate(templateObjects) {
-    for (const templateObject of templateObjects.shapes) {
-      templateObject.id += `-${shapes.length}`;
-      setShapes((prevShapes) => [...prevShapes, templateObject]);
+    for (const templateShape of templateObjects.shapes) {
+      templateShape.id += `-${shapes.length}`;
+      setShapes((prevShapes) => [...prevShapes, templateShape]);
       saveHistory();
     }
   }
 
+  // export canvas template
+  function exportTemplate() {
+    const templateObjects = {
+      shapes: shapes,
+    };
+    return templateObjects
+  }
 
   return (
     <>
@@ -219,6 +226,7 @@ export default function MultiLayerCanvas() {
         handleRedo={handleRedo}
         addText={addText}
         importTemplate={importTemplate}
+        exportTemplate={exportTemplate}
       />
 
       <Stage
