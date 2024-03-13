@@ -12,6 +12,8 @@ export default function DraggableShapes({ shapes, onDragStart, onDragEnd }) {
           y: shape.y,
           rotation: shape.rotation,
           draggable: true,
+          fill: shape.color,
+          stroke: shape.color,
           onDragStart: (e) => {
             e.cancelBubble = true;
             onDragStart(shape.id);
@@ -26,15 +28,15 @@ export default function DraggableShapes({ shapes, onDragStart, onDragEnd }) {
 
         switch (shape.shapeType) {
           case 'Star':
-            return <Star {...commonProps} numPoints={5} innerRadius={20} outerRadius={40} fill='#89b717' />;
+            return <Star {...commonProps} numPoints={5} innerRadius={20} outerRadius={40} />;
           case 'Circle':
-            return <Circle {...commonProps} radius={30} fill='#007bff' />;
+            return <Circle {...commonProps} radius={30} />;
           case 'Rect':
-            return <Rect {...commonProps} width={50} height={50} fill='#dc3545' />;
+            return <Rect {...commonProps} width={50} height={50} />;
           case 'LeftArrow':
-            return <Arrow {...commonProps} points={[100, 50, 0, 50]} pointerLength={10} pointerWidth={10} fill='green' stroke='green' />;
           case 'RightArrow':
-            return <Arrow {...commonProps} points={[0, 50, 100, 50]} pointerLength={10} pointerWidth={10} fill='blue' stroke='blue' />;
+            const points = shape.shapeType === 'LeftArrow' ? [100, 50, 0, 50] : [0, 50, 100, 50];
+            return <Arrow {...commonProps} points={points} pointerLength={10} pointerWidth={10} />;
           default:
             console.log('Unknown shape type:', shape.shapeType);
             return null;

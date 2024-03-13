@@ -100,8 +100,9 @@ export default function MultiLayerCanvas() {
   const addShape = () => {
     const newShape = {
       id: `${selectedShape}-${shapes.length}`, // Use selectedShape instead of selectedShapeType
-      shapeType: selectedShape, // This correctly refers to the state variable holding the selected shape type
-      x: Math.max(210, Math.random() * window.innerWidth * 0.8),
+      shapeType: selectedShape,
+      color: currentColor,
+      x: Math.max(300, Math.random() * window.innerWidth * 0.8),
       y: Math.random() * window.innerHeight * 0.8,
       rotation: Math.random() * 180,
       isDragging: false, // Initial dragging state is false
