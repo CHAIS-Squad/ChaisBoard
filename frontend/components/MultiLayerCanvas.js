@@ -258,9 +258,7 @@ export default function MultiLayerCanvas() {
       <Stage
         width={width}
         height={height}
-        // onMouseDown={handleMouseDown}
         onMouseDown={(e) => {
-          // Deselect current element if the stage (but not an element) is clicked
           if (e.target === e.target.getStage()) {
             deselectElement();
           }
@@ -283,7 +281,6 @@ export default function MultiLayerCanvas() {
               position={text.position}
               color={text.color}
               fontSize={text.fontSize}
-              isDragging={text.isDragging}
               editing={
                 text.isEditing &&
                 selection.type === 'text' &&

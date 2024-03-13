@@ -7,7 +7,6 @@ export default function TextEditor({
   position,
   color,
   fontSize,
-  isDragging,
   onDragStart,
   onDragEnd,
   onUpdate,
@@ -15,7 +14,6 @@ export default function TextEditor({
   onDoubleClick,
   isSelected,
 }) {
-  console.log(`Rendering TextEditor ${id} with props:`, { id, text, position, color, editing, isSelected });
 
   const textRef = useRef(null);
   const transformerRef = useRef(null);
