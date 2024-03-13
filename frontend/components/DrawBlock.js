@@ -5,12 +5,13 @@ const DrawBlock = ({
   id,
   position,
   lines,
-  shapes,
+  saveHistory,
   onCreate,
   onDragStart,
   onDragEnd,
+  updateLocalLines,
 }) => {
-  const [localLines, setLocalLines] = useState(lines || []);
+  const [localLines, setLocalLines] = useState([])
   const [drawing, setDrawing] = useState(false);
   const [shiftPressed, setShiftPressed] = useState(false);
   const groupRef = useRef();
@@ -73,6 +74,7 @@ const DrawBlock = ({
   // Handler for ending the drawing
   const handleMouseUp = () => {
     setDrawing(false);
+    updateLocalLines(localLines);
   };
 
   return (
@@ -88,6 +90,7 @@ const DrawBlock = ({
       }}
     >
       {/* Background rectangle for drawing */}
+      
       <Rect
         width={blockWidth}
         height={blockHeight}
@@ -97,6 +100,9 @@ const DrawBlock = ({
         onMouseDown={handleMouseDown}
         onMouseMove={handleMouseMove}
         onMouseUp={handleMouseUp}
+      />
+      <Text 
+        text={"Visual Block"}
       />
       {/* Drawing lines */}
       {localLines.map((line, i) => (

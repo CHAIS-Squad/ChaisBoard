@@ -23,6 +23,7 @@ export default function MultiLayerCanvas() {
   const [lines, setLines] = useState([]);
   const [shapes, setShapes] = useState([]);
   const [blocks, setBlocks] = useState([]);
+  const [drawLines, setDrawLines] = useState([]);
   const [selectedShape, setSelectedShape] = useState('Rect');
   const isDrawing = useRef(false);
   const [history, setHistory] = useState([...shapes]);
@@ -91,7 +92,7 @@ export default function MultiLayerCanvas() {
 
   const saveHistory = () => {
     const newHistory = history.slice(0, historyStep + 1);
-    setHistory([...newHistory, { lines, shapes }]);
+    setHistory([...newHistory, { lines, shapes, blocks }]);
     setHistoryStep(historyStep + 1);
   };
 
@@ -100,6 +101,7 @@ export default function MultiLayerCanvas() {
       setHistoryStep(historyStep - 1);
       setShapes(history[historyStep - 1].shapes);
       setLines(history[historyStep - 1].lines);
+      setBlocks(history[historyStep - 1].blocks);
     }
   };
 
@@ -108,6 +110,7 @@ export default function MultiLayerCanvas() {
       setHistoryStep(historyStep + 1);
       setShapes(history[historyStep + 1].shapes);
       setLines(history[historyStep + 1].lines);
+      setBlocks(istory[historyStep + 1].blocks);
     }
   };
 
@@ -177,6 +180,13 @@ export default function MultiLayerCanvas() {
     const newBlocks = [...blocks, newBlock];
     setBlocks(newBlocks);
     saveHistory();
+
+    newBlocks[newBlocks.length - 1].updateLocalLines = (newLines) => {
+      const updatedBlocks = newBlocks.map((block) =>
+        block.id === newBlock.id ? { ...block, lines: newLines } : block
+      );
+      setBlocks(updatedBlocks);
+    };
   };
   
   const handleBlockDragEnd = (id, newPos) => {
@@ -187,6 +197,29 @@ export default function MultiLayerCanvas() {
       return block;
     });
     setBlocks(updatedBlocks);
+  };
+
+  const handleLineUpdate = (id, newLines) => {
+    const updatedShapes = shapes.map((shape) => {
+      if (shape.id === id) {
+        return { ...shape, lines: newLines };
+      }
+      return shape;
+    });
+    setShapes(updatedShapes);
+    saveHistory();
+  }
+
+  const handleUpdateLocalLines = (blockId, newLines) => {
+    const updatedBlocks = blocks.map((block) => {
+      if (block.id === blockId) {
+        return { ...block, lines: newLines };
+      }
+      return block;
+    });
+    setBlocks(updatedBlocks);
+    saveHistory(); // Update the history after updating local lines
+  };
 
   const handleTextDoubleClick = (textId) => {
     const updatedTexts = texts.map((text) => {
@@ -254,11 +287,11 @@ export default function MultiLayerCanvas() {
               id={block.id}
               position={block.position}
               lines={block.lines}
-              handleUndo={handleUndo}
-              handleRedo={handleRedo}
+              saveHistory={handleLineUpdate}
               onCreate={handleCreateBlock} 
               onDragStart={handleDragStart} 
               onDragEnd={handleBlockDragEnd}
+              updateLocalLines={(newLines) => handleUpdateLocalLines(block.id, newLines)}
             />
           </Layer>
         ))}
