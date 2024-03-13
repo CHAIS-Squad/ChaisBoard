@@ -24,6 +24,7 @@ export default function MultiLayerCanvas() {
   const [history, setHistory] = useState([...shapes]);
   const [historyStep, setHistoryStep] = useState(0);
   const [texts, setTexts] = useState([]);
+  const [currentColor, setCurrentColor] = useState('#000000');
 
   // console.log('Current texts state:', texts);
   // console.log('Current selectedShape state:', selectedShape);
@@ -198,8 +199,8 @@ export default function MultiLayerCanvas() {
     setTexts((prevTexts) => [...prevTexts, newText]);
     saveHistory();
   };
-  
-   // import canvas template
+
+  // import canvas template
   function importTemplate(templateObjects) {
     for (const templateObject of templateObjects.shapes) {
       templateObject.id += `-${shapes.length}`;
@@ -207,7 +208,6 @@ export default function MultiLayerCanvas() {
       saveHistory();
     }
   }
-
 
   return (
     <>
@@ -219,6 +219,8 @@ export default function MultiLayerCanvas() {
         handleRedo={handleRedo}
         addText={addText}
         importTemplate={importTemplate}
+        currentColor={currentColor}
+        setCurrentColor={setCurrentColor}
       />
 
       <Stage

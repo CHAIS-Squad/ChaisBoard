@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
 import useCanvasTemplates from '@/api/canvas-templates';
+import { CirclePicker, HuePicker } from 'react-color';
 
-const Sidebar = ({ selectedShape, setSelectedShape, addShape, handleUndo, handleRedo, addText, importTemplate }) => {
+const Sidebar = ({ selectedShape, setSelectedShape, addShape, handleUndo, handleRedo, addText, importTemplate, currentColor, setCurrentColor }) => {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', position: 'fixed', top: 0, left: 0, height: '100%', padding: '20px', background: '#fff', boxShadow: '0 0 10px rgba(0,0,0,0.1)', zIndex: 1000 }}>
@@ -15,6 +16,14 @@ const Sidebar = ({ selectedShape, setSelectedShape, addShape, handleUndo, handle
       <button onClick={handleRedo}>Redo</button>
       <TemplatesToolbar importTemplate={importTemplate} />
       <button onClick={addText}>Add Text</button>
+      <CirclePicker
+        color={currentColor}
+        onChangeComplete={(color) => setCurrentColor(color.hex)}
+      />
+      <HuePicker
+        color={currentColor}
+        onChangeComplete={(color) => setCurrentColor(color.hex)}
+      />
     </div>
   );
 };
