@@ -10,7 +10,7 @@ function ColorPickerModal({ currentColor, setCurrentColor }) {
 
   return (
     <>
-      <Button variant='primary' onClick={handleShow}>
+      <Button variant="outline-secondary" size="sm" className="mb-2" onClick={handleShow}>
         Color Picker
       </Button>
 
