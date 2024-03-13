@@ -4,16 +4,26 @@ import useCanvasTemplates from '@/api/canvas-templates';
 function Sidebar({ selectedShape, setSelectedShape, addShape, handleUndo, handleRedo, onSave, onAdd, addTemplate}) {
   const { getCanvasTemplate, getCanvasTemplatesList } = useCanvasTemplates();
   const [ templates, setTemplates ] = useState([]);
+  const [ selectedTemplate, setSelectedTemplate ] = useState({});
 
   useEffect(() => {
-    const response = getCanvasTemplatesList();
-    setTemplates(response);
+    updateTemplateSelector();
   }, []);
+
+  async function updateTemplateSelector() {
+    const response = await getCanvasTemplatesList();
+    setTemplates(response);
+  }
+
+  async function retrieveTemplate(event) {
+    const templateId = event.target.value;
+    const response = await getCanvasTemplate(templateId);
+    setSelectedTemplate(response);
+  }
 
   function handleTemplateSubmit(event) {
     event.preventDefault();
-    const templateObjects = getCanvasTemplate(event.target.templateSelector.value);
-    addTemplate(templateObjects);
+    addTemplate(selectedTemplate.konva_objects);
   }
 
   return (
@@ -31,10 +41,14 @@ function Sidebar({ selectedShape, setSelectedShape, addShape, handleUndo, handle
       
       <form onSubmit={handleTemplateSubmit} className='flex flex-col'>
         <label htmlFor="templateSelector">Import a template:</label>
-        <select name="templateSelector" id="templateSelector">
-          {/* {templates.map((template) => {
-            return <option key={template.id} value={template.id}>{template.name}</option>
-          })} */}
+        <select name="templateSelector" id="templateSelector" onChange={retrieveTemplate}>
+          {templates.map((template) => {
+            return (
+              <option key={template.id} value={template.id}>
+                {template.name}
+              </option>
+            );
+          })}
         </select>
         <button type='submit'>Add Template</button>
       </form>
