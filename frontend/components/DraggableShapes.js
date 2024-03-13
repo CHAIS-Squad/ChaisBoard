@@ -8,38 +8,31 @@ export default function DraggableShapes({
   selection,
   setSelection,
 }) {
+  console.log("Shapes in DraggableShapes: ", shapes); 
+  
   const transformerRef = useRef(null);
   const layerRef = useRef(null);
 
   useEffect(() => {
-    const updateTransformerNodes = () => {
-      if (transformerRef.current) {
-        if (selection.id) {
-          const selectedNode = transformerRef.current.getStage().findOne(`#${selection.id}`);
+    if (transformerRef.current) {
+      if (selection.id) {
+        // Attempt to find the selected node using the selection.id
+        const selectedNode = transformerRef.current.getStage().findOne(`#${selection.id}`);
+        // Ensure selectedNode is defined before attempting to use it
+        if (selectedNode) {
           transformerRef.current.nodes([selectedNode]);
         } else {
+          // If no node was found, clear the transformer's nodes array
           transformerRef.current.nodes([]);
         }
-        transformerRef.current.getLayer().batchDraw();
+      } else {
+        // If there's no selection, also clear the transformer's nodes array
+        transformerRef.current.nodes([]);
       }
-    };
-
-    const checkDeselect = (e) => {
-      if (e.target === e.target.getStage()) {
-        setSelection({ type: null, id: null });
-      }
-    };
-
-    const stage = transformerRef.current?.getStage();
-    if (stage) {
-      // Update transformer nodes initially
-      updateTransformerNodes();
-      // Listen for stage clicks to handle deselection
-      stage.on('click tap', checkDeselect);
-      // Clean up event listener on component unmount or re-render
-      return () => stage.off('click tap', checkDeselect);
+      transformerRef.current.getLayer().batchDraw();
     }
-  }, [selection, shapes, setSelection]);
+  }, [selection, shapes]);
+  
 
 
   return (

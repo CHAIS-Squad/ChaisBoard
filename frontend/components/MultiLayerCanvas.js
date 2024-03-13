@@ -51,29 +51,29 @@ export default function MultiLayerCanvas() {
     setTexts(updatedTexts);
   };
 
-  useEffect(() => {
-    const handleKeyDown = (e) => {
-      if ((e.ctrlKey || e.metaKey) && e.key === 'z') {
-        e.preventDefault();
-        handleUndo();
-      } else if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === 'z') {
-        e.preventDefault();
-        handleRedo();
-      }
-    };
+  // useEffect(() => {
+  //   const handleKeyDown = (e) => {
+  //     if ((e.ctrlKey || e.metaKey) && e.key === 'z') {
+  //       e.preventDefault();
+  //       handleUndo();
+  //     } else if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === 'z') {
+  //       e.preventDefault();
+  //       handleRedo();
+  //     }
+  //   };
 
-    window.addEventListener('keydown', handleKeyDown);
+  //   window.addEventListener('keydown', handleKeyDown);
 
-    return () => {
-      window.removeEventListener('keydown', handleKeyDown);
-    };
-  }, [lines, shapes]);
+  //   return () => {
+  //     window.removeEventListener('keydown', handleKeyDown);
+  //   };
+  // }, [lines, shapes]);
 
   const handleMouseDown = (e) => {
     // Check if the click target is the stage (background), indicating a click outside any shape
     if (e.target === e.target.getStage()) {
       deselectElement(); // This should effectively reset selection state
-  
+
       isDrawing.current = true;
       const newLine = { points: [], color: currentColor };
       setLines((prevLines) => [...prevLines, newLine]);
@@ -82,8 +82,6 @@ export default function MultiLayerCanvas() {
       isDrawing.current = false;
     }
   };
-  
-  
 
   const handleMouseMove = (e) => {
     if (!isDrawing.current) return;
@@ -108,8 +106,8 @@ export default function MultiLayerCanvas() {
       id: `${selectedShape}-${shapes.length}`, // Use selectedShape instead of selectedShapeType
       shapeType: selectedShape,
       color: currentColor,
-      x: Math.max(300, Math.random() * window.innerWidth * 0.8),
-      y: Math.random() * window.innerHeight * 0.8,
+      x: 300,
+      y: 100,
       rotation: Math.random() * 180,
       isDragging: false, // Initial dragging state is false
     };
@@ -216,15 +214,15 @@ export default function MultiLayerCanvas() {
           ...text,
           ...updateProps, // Apply updates, which may include text, fontSize, and/or position
           position: { ...text.position, ...updateProps.position }, // Ensure position updates are merged
-          isEditing: false // Ensure we exit editing mode
+          isEditing: false, // Ensure we exit editing mode
         };
       }
       return text;
     });
-    
+
     setTexts(updatedTexts);
     saveHistory();
-};
+  };
 
   const addText = () => {
     const newText = {
@@ -238,7 +236,7 @@ export default function MultiLayerCanvas() {
     setTexts((prevTexts) => [...prevTexts, newText]);
     saveHistory();
   };
-  
+
   // import canvas template
   function importTemplate(templateObjects) {
     let shapeID = shapes.length;
@@ -278,6 +276,40 @@ export default function MultiLayerCanvas() {
     };
     return templateObjects;
   }
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'z') {
+        e.preventDefault();
+        handleUndo();
+      } else if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === 'z') {
+        e.preventDefault();
+        handleRedo();
+      } else if (e.key === 'Delete' || e.key === 'Backspace') {
+        e.preventDefault();
+        console.log('Key pressed: ', e.key);
+        if (selection.id) {
+          console.log('Attempting to delete: ', selection.type, selection.id);
+          if (selection.type === 'shape') {
+            const newShapes = shapes.filter(
+              (shape) => shape.id !== selection.id
+            );
+            console.log('New shapes after deletion: ', newShapes); // Debugging line
+            setShapes(newShapes);
+          } else if (selection.type === 'text') {
+            const newTexts = texts.filter((text) => text.id !== selection.id);
+            console.log('New texts after deletion: ', newTexts); // Debugging line
+            setTexts(newTexts);
+          }
+          deselectElement();
+        }
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [selection, shapes, texts, deselectElement, handleUndo, handleRedo]);
 
   return (
     <>
@@ -305,7 +337,6 @@ export default function MultiLayerCanvas() {
         }}
         onMouseMove={handleMouseMove}
         onMouseUp={handleMouseUp}
-        
       >
         <Whiteboard lines={lines} />
         <DraggableShapes
