@@ -72,8 +72,8 @@ export default function MultiLayerCanvas() {
   };
 
   // Function to add a new shape based on the selected type
-  const addShape = (template) => {
-    const newShape = template.x ? template : {
+  const addShape = () => {
+    const newShape = {
       id: `${selectedShape}-${shapes.length}`, // Use selectedShape instead of selectedShapeType
       shapeType: selectedShape, // This correctly refers to the state variable holding the selected shape type
       x: Math.max(210, Math.random() * window.innerWidth * 0.8),
@@ -166,28 +166,12 @@ export default function MultiLayerCanvas() {
     }
   };
 
-  // save test
-  function saveShapes() {
-    console.log(shapes[0]);
-  }
-
-  // load test
-  function loadShape() {
-    const newShape = {
-      "id": "Rect-0",
-      "shapeType": "Rect",
-      "x": 210,
-      "y": 225.49816409868518,
-      "rotation": 117.50656501577862,
-      "isDragging": false
-    }
-    setShapes([...shapes, newShape]);
-  }
-
-  // add template shapes
-  function addTemplate(templateObjects) {
-    for (const templateObject of templateObjects) {
-      addShape(templateObject);
+  // import canvas template
+  function importTemplate(templateObjects) {
+    for (const templateObject of templateObjects.shapes) {
+      templateObject.id += `-${shapes.length}`;
+      setShapes((prevShapes) => [...prevShapes, templateObject]);
+      saveHistory();
     }
   }
 
@@ -199,9 +183,7 @@ export default function MultiLayerCanvas() {
         addShape={addShape}
         handleUndo={handleUndo}
         handleRedo={handleRedo}
-        onSave={saveShapes}
-        onAdd={loadShape}
-        addTemplate={addTemplate}
+        importTemplate={importTemplate}
       />
 
       <Stage
