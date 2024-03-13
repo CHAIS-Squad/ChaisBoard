@@ -215,14 +215,9 @@ export default function MultiLayerCanvas() {
       return text;
     });
     
-    setTexts(updatedTexts); // Update the state with the modified texts array
+    setTexts(updatedTexts);
     saveHistory();
 };
-
-
-  useEffect(() => {
-    console.log('Texts state updated:', texts);
-  }, [texts]);
 
   const addText = () => {
     const newText = {

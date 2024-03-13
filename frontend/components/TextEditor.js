@@ -25,28 +25,33 @@ export default function TextEditor({
   useEffect(() => {
     if (editing) {
       const textareaElement = document.createElement('textarea');
-
-      // Position and style the textarea
+  
+      // Position and style the textarea to match the Konva Text's properties
       textareaElement.value = editingText;
       textareaElement.style.position = 'absolute';
       textareaElement.style.top = `${position.y}px`;
       textareaElement.style.left = `${position.x}px`;
-      textareaElement.style.fontSize = '16px';
+      textareaElement.style.fontSize = `${fontSize}px`;
+      textareaElement.style.lineHeight = 'normal';
+      textareaElement.style.height = 'auto';
+      textareaElement.style.wordWrap = 'break-word';
+      textareaElement.style.whiteSpace = 'pre-wrap';
+      textareaElement.style.resize = 'none';
+      
       document.body.appendChild(textareaElement);
       textareaElement.focus();
-
-      // Handle outside click and Enter key to update and remove textarea
+  
       const handleOutsideClickOrEnter = (e) => {
         if (e.type === 'click' && e.target !== textareaElement || e.key === 'Enter') {
           setEditingText(textareaElement.value);
-          onUpdate(id, { text: textareaElement.value });
+          onUpdate(id, { text: textareaElement.value, fontSize: fontSize }); // Include fontSize if you wish to update it upon text edit confirmation
           document.body.removeChild(textareaElement);
         }
       };
-
+  
       window.addEventListener('click', handleOutsideClickOrEnter);
       textareaElement.addEventListener('keydown', handleOutsideClickOrEnter);
-
+  
       // Cleanup function to remove event listeners and the textarea
       return () => {
         window.removeEventListener('click', handleOutsideClickOrEnter);
@@ -56,7 +61,8 @@ export default function TextEditor({
         }
       };
     }
-  }, [editing, id, onUpdate, position, editingText]);
+  }, [editing, id, onUpdate, position, editingText, fontSize]);
+  
 
   // Effect for handling Konva Transformer
   useEffect(() => {
