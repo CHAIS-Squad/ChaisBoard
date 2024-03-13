@@ -1,6 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Stage, Layer, Rect, Group, Line, Text } from 'react-konva';
-import Whiteboard from './Whiteboard';
 
 const DrawBlock = ({
   id,
@@ -115,9 +114,3 @@ const DrawBlock = ({
 };
 
 export default DrawBlock;
-
-// You can't put a <Stage> within another <Stage>
-// Solution was to try and make it so that you draw within a specific layer with a shape (rect) and all of the lines.
-// Lines should move alongside the shape with either layer or grouping
-// Lines 173-206 in MultiLayerCanvas.js are some functions used to create a new drawblock.
-// Note: Groups can't have Layer's as children.
