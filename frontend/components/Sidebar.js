@@ -25,6 +25,7 @@ function TemplatesToolbar({ importTemplate, exportTemplate }) {
     getCanvasTemplatesList,
     createCanvasTemplate,
     deleteCanvasTemplate,
+    updateCanvasTemplate,
   } = useCanvasTemplates();
   const [templates, setTemplates] = useState([]);
   const [selectedTemplate, setSelectedTemplate] = useState({});
@@ -79,6 +80,22 @@ function TemplatesToolbar({ importTemplate, exportTemplate }) {
     }
   }
 
+  async function handleUpdateTemplate() {
+    const confirm = window.confirm(
+      `Are you sure you want to update the template "${selectedTemplate.name}"?`
+    );
+    if (confirm) {
+      const templateObjects = exportTemplate();
+      const updatedTemplate = {
+        ...selectedTemplate,
+        konva_objects: templateObjects,
+      };
+      await updateCanvasTemplate(selectedTemplate.id, updatedTemplate);
+    } else {
+      alert("Template was not updated.");
+    }
+  }
+
   function handleAddTemplate() {
     importTemplate(selectedTemplate.konva_objects);
   }
@@ -123,6 +140,7 @@ function TemplatesToolbar({ importTemplate, exportTemplate }) {
       <div
         className={`flex flex-col ${selectedTemplate.id ? "block" : "hidden"}`}
       >
+        <button onClick={handleUpdateTemplate}>Update Template</button>
         <button onClick={handleDeleteTemplate}>Delete Template</button>
       </div>
     </div>

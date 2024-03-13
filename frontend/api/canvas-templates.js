@@ -18,7 +18,7 @@ function useCanvasTemplates() {
 
   async function getCanvasTemplate(templateId) {
     try {
-      const response = await fetch(`${apiUrl}/${templateId}`, options);
+      const response = await fetch(`${apiUrl}/${templateId}/`, options);
       const data = await response.json();
       return data;
     } catch (error) {
@@ -42,8 +42,20 @@ function useCanvasTemplates() {
 
   async function deleteCanvasTemplate(templateId) {
     try {
-      await fetch(`${apiUrl}/${templateId}`, {
+      await fetch(`${apiUrl}/${templateId}/`, {
         method: "DELETE",
+        ...options,
+      });
+    } catch (error) {
+      handleError(error);
+    }
+  }
+
+  async function updateCanvasTemplate(templateId, updatedTemplate) {
+    try {
+      await fetch(`${apiUrl}/${templateId}/`, {
+        method: "PUT",
+        body: JSON.stringify(updatedTemplate),
         ...options,
       });
     } catch (error) {
@@ -56,6 +68,7 @@ function useCanvasTemplates() {
     getCanvasTemplatesList,
     createCanvasTemplate,
     deleteCanvasTemplate,
+    updateCanvasTemplate,
   };
 }
 
