@@ -1,10 +1,18 @@
-import React from 'react';
-import getCanvasTemplates from '@/api/canvas-templates';
+import { useEffect, useState } from 'react';
+import useCanvasTemplates from '@/api/canvas-templates';
 
 function Sidebar({ selectedShape, setSelectedShape, addShape, handleUndo, handleRedo, onSave, onAdd, addTemplate}) {
+  const { getCanvasTemplate, getCanvasTemplatesList } = useCanvasTemplates();
+  const [ templates, setTemplates ] = useState([]);
+
+  useEffect(() => {
+    const response = getCanvasTemplatesList();
+    setTemplates(response);
+  }, []);
+
   function handleTemplateSubmit(event) {
     event.preventDefault();
-    const templateObjects = getCanvasTemplates(event.target.templateSelector.value);
+    const templateObjects = getCanvasTemplate(event.target.templateSelector.value);
     addTemplate(templateObjects);
   }
 
@@ -24,8 +32,9 @@ function Sidebar({ selectedShape, setSelectedShape, addShape, handleUndo, handle
       <form onSubmit={handleTemplateSubmit} className='flex flex-col'>
         <label htmlFor="templateSelector">Import a template:</label>
         <select name="templateSelector" id="templateSelector">
-          <option value="linked_list">Linked List</option>
-          <option value="stack">Stack</option>
+          {/* {templates.map((template) => {
+            return <option key={template.id} value={template.id}>{template.name}</option>
+          })} */}
         </select>
         <button type='submit'>Add Template</button>
       </form>
