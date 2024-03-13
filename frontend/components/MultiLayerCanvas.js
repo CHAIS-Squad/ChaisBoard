@@ -198,6 +198,16 @@ export default function MultiLayerCanvas() {
     setTexts((prevTexts) => [...prevTexts, newText]);
     saveHistory();
   };
+  
+   // import canvas template
+  function importTemplate(templateObjects) {
+    for (const templateObject of templateObjects.shapes) {
+      templateObject.id += `-${shapes.length}`;
+      setShapes((prevShapes) => [...prevShapes, templateObject]);
+      saveHistory();
+    }
+  }
+
 
   return (
     <>
@@ -208,6 +218,7 @@ export default function MultiLayerCanvas() {
         handleUndo={handleUndo}
         handleRedo={handleRedo}
         addText={addText}
+        importTemplate={importTemplate}
       />
 
       <Stage
