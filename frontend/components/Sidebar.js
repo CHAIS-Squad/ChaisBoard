@@ -48,7 +48,7 @@ function TemplatesToolbar({ importTemplate }) {
     <form onSubmit={handleTemplateSubmit} className='flex flex-col'>
         <label htmlFor="templateSelector">Import a template:</label>
         <select name="templateSelector" id="templateSelector" onChange={retrieveTemplate}>
-          {templates.map((template) => {
+          {templates && templates.map((template) => {
             return (
               <option key={template.id} value={template.id}>
                 {template.name}
