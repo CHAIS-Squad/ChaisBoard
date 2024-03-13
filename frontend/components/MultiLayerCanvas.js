@@ -195,6 +195,7 @@ export default function MultiLayerCanvas() {
       id: `text-${texts.length}`, // Ensuring each text has a unique ID
       position: { x: 200, y: texts.length * 20 + 100 },
       text: 'New Text',
+      color: currentColor,
       isDragging: false,
       isEditing: false,
     };
@@ -244,6 +245,7 @@ export default function MultiLayerCanvas() {
               id={text.id}
               text={text.text}
               position={text.position}
+              color={text.color}
               isDragging={text.isDragging}
               editing={text.isEditing}
               onDragStart={() => handleTextDragStart(text.id)}

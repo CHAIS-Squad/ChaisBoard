@@ -15,7 +15,6 @@ export default function Whiteboard({ lines }) {
           lineJoin='round'
         />
       ))}
-      {/* Additional drawing elements or shapes */}
     </Layer>
   );
 }

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import useCanvasTemplates from '@/api/canvas-templates';
 import ColorPickerModal from './ColorPickerModal';
+import { Button } from 'react-bootstrap';
 
 const Sidebar = ({ selectedShape, setSelectedShape, addShape, handleUndo, handleRedo, addText, importTemplate, currentColor, setCurrentColor }) => {
 
@@ -11,11 +12,11 @@ const Sidebar = ({ selectedShape, setSelectedShape, addShape, handleUndo, handle
         <option value='Circle'>Circle</option>
         <option value='Rect'>Rectangle</option>
       </select>
-      <button onClick={addShape} style={{ marginBottom: '10px' }}>Add Shape</button>
-      <button onClick={handleUndo} style={{ marginBottom: '10px' }}>Undo</button>
-      <button onClick={handleRedo}>Redo</button>
+      <Button onClick={addShape} style={{ marginBottom: '10px' }}>Add Shape</Button>
+      <Button onClick={handleUndo} style={{ marginBottom: '10px' }}>Undo</Button>
+      <Button onClick={handleRedo}>Redo</Button>
       <TemplatesToolbar importTemplate={importTemplate} />
-      <button onClick={addText}>Add Text</button>
+      <Button onClick={addText}>Add Text</Button>
       <ColorPickerModal currentColor={currentColor} setCurrentColor={setCurrentColor} />
     </div>
   );

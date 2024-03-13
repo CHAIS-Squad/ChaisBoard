@@ -5,6 +5,7 @@ export default function TextEditor({
   id,
   text,
   position,
+  color,
   isDragging,
   onDragStart,
   onDragEnd,
@@ -54,6 +55,7 @@ export default function TextEditor({
         x={position.x}
         y={position.y}
         text={editing ? '' : text}
+        fill={color}
         draggable
         onDragStart={editing ? null : onDragStart}
         onDragEnd={editing ? null : onDragEnd}
