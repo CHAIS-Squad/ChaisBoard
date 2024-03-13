@@ -20,16 +20,20 @@ const DrawBlock = dynamic(() => import('../components/DrawBlock'), {
 export default function MultiLayerCanvas() {
   const [lines, setLines] = useState([]);
   const [shapes, setShapes] = useState([]);
-  const [blocks, setBlocks] = useState([  ]);
+  const [blocks, setBlocks] = useState([]);
   const [block1Lines, setBlock1Lines] = useState([]);
   const [selectedShape, setSelectedShape] = useState('Rect');
   const isDrawing = useRef(false);
   const [history, setHistory] = useState([...shapes]);
   const [historyStep, setHistoryStep] = useState(0);
   const [texts, setTexts] = useState([
-    { id: 'text1', position: { x: 210, y: 50 }, text: 'Drag me!', isDragging: false },
+    {
+      id: 'text1',
+      position: { x: 210, y: 50 },
+      text: 'Drag me!',
+      isDragging: false,
+    },
   ]);
-
 
   // console.log('Current texts state:', texts);
   // console.log('Current selectedShape state:', selectedShape);
@@ -205,7 +209,26 @@ export default function MultiLayerCanvas() {
     }
   };
 
-
+  const handleCreateBlock = () => {
+    const newBlock = {
+      id: `block-${blocks.length + 1}`,
+      position: { x: 500, y: 500 },
+      lines: [],
+    };
+    const newBlocks = [...blocks, newBlock];
+    setBlocks(newBlocks);
+    console.log('New blocks:', newBlocks); // Check the console to see if this logs the updated array
+  };
+  
+  const handleBlockDragEnd = (id, newPos) => {
+    const updatedBlocks = blocks.map(block => {
+      if (block.id === id) {
+        return { ...block, position: newPos };
+      }
+      return block;
+    });
+    setBlocks(updatedBlocks);
+  };
 
   return (
     <>
@@ -215,8 +238,7 @@ export default function MultiLayerCanvas() {
         addShape={addShape}
         handleUndo={handleUndo}
         handleRedo={handleRedo}
-        drawClick={handleVisualClick}
-        drawDrag={handleVisualDragStart}
+        handleCreateBlock={handleCreateBlock}
       />
 
       <Stage
@@ -230,24 +252,21 @@ export default function MultiLayerCanvas() {
       >
         <Layer>
           <Text text='Static test' x={10} y={10} />
-
         </Layer>
         <Layer>
           <Whiteboard lines={lines} />
         </Layer>
-
-        {/* <DrawBlock /> */}
         {blocks.map((block) => (
-          <DrawBlock
-            key={block.id}
-            id={block.id}
-            position={block.position}
-            lines={block.lines}
-            // ... other props if needed
-            onCreate={handleCreateNewBlock} // Pass the function as onCreate prop
-            onDragStart={handleDragStart}
-            onDragEnd={handleDragEnd}
-          />
+          <Layer key={block.id}>
+            <DrawBlock
+              id={block.id}
+              position={block.position}
+              lines={block.lines}
+              onCreate={handleCreateBlock} 
+              onDragStart={handleDragStart} 
+              onDragEnd={handleBlockDragEnd}
+            />
+          </Layer>
         ))}
         <DraggableShapes
           shapes={shapes}
@@ -261,7 +280,7 @@ export default function MultiLayerCanvas() {
             text={text.text}
             position={text.position}
             isDragging={text.isDragging}
-            onDragStart={() => handleTextDragStart(text.id)}
+            onDragStart={() => handleVisualDragStart(text.id)}
             onDragEnd={(e) => handleTextDragEnd(text.id, e)}
           />
         ))}

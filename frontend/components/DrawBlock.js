@@ -63,35 +63,107 @@
 //   );
 // };
 
-import React, { useState, useRef } from 'react';
-import { Layer, Group } from 'react-konva';
+import React, { useState, useRef, useEffect } from 'react';
+import { Stage, Layer, Rect, Group, Line, Text } from 'react-konva';
+import Whiteboard from './Whiteboard';
 
-const DrawBlock = ({ id, position, lines, shapes, onCreate, onDragStart, onDragEnd }) => {
+const DrawBlock = ({
+  id,
+  position,
+  lines,
+  shapes,
+  onCreate,
+  onDragStart,
+  onDragEnd,
+}) => {
   const [localLines, setLocalLines] = useState(lines || []);
+  const [drawing, setDrawing] = useState(false);
+  const groupRef = useRef();
 
-  const handleLineDraw = (newLines) => {
-    setLocalLines([...localLines, ...newLines]); 
-  };
+  const blockWidth = 300;
+  const blockHeight = 300;
 
-  const handleClick = () => {
-    if (onCreate) {
-      onCreate(); 
+  useEffect(() => {
+    // Function to stop drawing
+    const stopDrawing = () => {
+      if (drawing) {
+        setDrawing(false);
+      }
+    };
+
+    // Attach event listener to the window for mouse up events
+    window.addEventListener('mouseup', stopDrawing);
+
+    // Cleanup function to remove the event listener
+    return () => {
+      window.removeEventListener('mouseup', stopDrawing);
+    };
+  }, [drawing]); // Depend on the drawing state to add or remove the listener as needed
+
+  const handleMouseDown = (e) => {
+    const clickedOnRect = e.target.className === 'Rect';
+    if (clickedOnRect) {
+      setDrawing(true);
+      e.evt.stopPropagation(); // Prevent the event from bubbling up
+      const pos = e.target.getStage().getPointerPosition();
+      setLocalLines([...localLines, [pos.x - position.x, pos.y - position.y]]);
     }
   };
 
+  // Add points to the current line on mouse move
+  const handleMouseMove = (e) => {
+    if (!drawing) return;
+    const stage = e.target.getStage();
+    const point = stage.getPointerPosition();
+    let lastLine = localLines[localLines.length - 1];
+    lastLine = [...lastLine, point.x - position.x, point.y - position.y];
+    setLocalLines([...localLines.slice(0, -1), lastLine]);
+  };
+
+  // Handler for ending the drawing
+  const handleMouseUp = () => {
+    setDrawing(false);
+  };
 
   return (
-    <Layer draggable onDragStart={() => onDragStart(id)} onDragEnd={onDragEnd}>
-      <Group x={position.x} y={position.y}>
-        <Whiteboard lines={localLines} onLineDraw={handleLineDraw} />
-      </Group>
-      <button onClick={handleClick}>Create New Block</button> 
-    </Layer>
+    <Group
+      ref={groupRef}
+      draggable={!drawing} // Only allow dragging if not drawing
+      x={position.x}
+      y={position.y}
+      onDragStart={() => onDragStart(id)}
+      onDragEnd={(e) => {
+        const newPos = { x: e.target.x(), y: e.target.y() };
+        onDragEnd(id, newPos);
+      }}
+    >
+      {/* Background rectangle for drawing */}
+      <Rect
+        width={blockWidth}
+        height={blockHeight}
+        fill="gray"
+        strokeWidth={1}
+        stroke="black"
+        onMouseDown={handleMouseDown}
+        onMouseMove={handleMouseMove}
+        onMouseUp={handleMouseUp}
+      />
+      {/* Drawing lines */}
+      {localLines.map((line, i) => (
+        <Line
+          key={i}
+          points={line}
+          stroke="black"
+          strokeWidth={2}
+          lineCap="round"
+          lineJoin="round"
+        />
+      ))}
+    </Group>
   );
 };
 
 export default DrawBlock;
-
 
 // You can't put a <Stage> within another <Stage>
 // Solution was to try and make it so that you draw within a specific layer with a shape (rect) and all of the lines.
