@@ -231,14 +231,45 @@ export default function MultiLayerCanvas() {
     setTexts((prevTexts) => [...prevTexts, newText]);
     saveHistory();
   };
-
+  
   // import canvas template
   function importTemplate(templateObjects) {
-    for (const templateObject of templateObjects.shapes) {
-      templateObject.id += `-${shapes.length}`;
-      setShapes((prevShapes) => [...prevShapes, templateObject]);
+    let shapeID = shapes.length;
+    for (const templateShape of templateObjects.shapes) {
+      const newShape = {
+        ...templateShape,
+        id: `${templateShape.shapeType}-${shapeID}`,
+      };
+      setShapes((prevShapes) => [...prevShapes, newShape]);
+      saveHistory();
+      shapeID += 1;
+    }
+    for (const templateText of templateObjects.texts) {
+      const newText = {
+        ...templateText,
+        id: `text-${texts.length}`,
+      };
+      setTexts((prevTexts) => [...prevTexts, newText]);
       saveHistory();
     }
+    // for (const templateLine of templateObjects.lines) {
+    //   const newLine = {
+    //     ...templateLine,
+    //     id: `line-${lines.length}`,
+    //   };
+    //   setLines((prevLines) => [...prevLines, newLine]);
+    //   saveHistory();
+    // }
+  }
+
+  // export canvas template
+  function exportTemplate() {
+    const templateObjects = {
+      shapes: shapes,
+      texts: texts,
+      lines: lines,
+    };
+    return templateObjects;
   }
 
   return (
@@ -251,6 +282,7 @@ export default function MultiLayerCanvas() {
         handleRedo={handleRedo}
         addText={addText}
         importTemplate={importTemplate}
+        exportTemplate={exportTemplate}
         currentColor={currentColor}
         setCurrentColor={setCurrentColor}
       />
