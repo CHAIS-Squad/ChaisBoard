@@ -70,14 +70,20 @@ export default function MultiLayerCanvas() {
   }, [lines, shapes]);
 
   const handleMouseDown = (e) => {
+    // Check if the click target is the stage (background), indicating a click outside any shape
     if (e.target === e.target.getStage()) {
+      deselectElement(); // This should effectively reset selection state
+  
       isDrawing.current = true;
-      // Start a new line with the current color
       const newLine = { points: [], color: currentColor };
       setLines((prevLines) => [...prevLines, newLine]);
       saveHistory();
+    } else {
+      isDrawing.current = false;
     }
   };
+  
+  
 
   const handleMouseMove = (e) => {
     if (!isDrawing.current) return;
