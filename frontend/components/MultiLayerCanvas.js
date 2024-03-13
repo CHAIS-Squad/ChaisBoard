@@ -231,6 +231,13 @@ export default function MultiLayerCanvas() {
     setTexts((prevTexts) => [...prevTexts, newText]);
     saveHistory();
   };
+
+  const clearCanvas = () => {
+    setLines([]);
+    setShapes([]);
+    setTexts([]);
+    // Reset any other states related to the canvas content
+  };
   
   // import canvas template
   function importTemplate(templateObjects) {
@@ -285,6 +292,7 @@ export default function MultiLayerCanvas() {
         exportTemplate={exportTemplate}
         currentColor={currentColor}
         setCurrentColor={setCurrentColor}
+        clearCanvas={clearCanvas}
       />
 
       <Stage
