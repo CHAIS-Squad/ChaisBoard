@@ -2,7 +2,6 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Stage, Layer, Text, Rect, Circle, Star } from 'react-konva';
 import dynamic from 'next/dynamic';
 import Sidebar from './Sidebar';
-// import DrawBlock from './DrawBlock';
 
 const Whiteboard = dynamic(() => import('../components/Whiteboard'), {
   ssr: false,
@@ -21,7 +20,6 @@ export default function MultiLayerCanvas() {
   const [lines, setLines] = useState([]);
   const [shapes, setShapes] = useState([]);
   const [blocks, setBlocks] = useState([]);
-  const [block1Lines, setBlock1Lines] = useState([]);
   const [selectedShape, setSelectedShape] = useState('Rect');
   const isDrawing = useRef(false);
   const [history, setHistory] = useState([...shapes]);
@@ -34,6 +32,7 @@ export default function MultiLayerCanvas() {
       isDragging: false,
     },
   ]);
+
 
   // console.log('Current texts state:', texts);
   // console.log('Current selectedShape state:', selectedShape);
@@ -174,41 +173,6 @@ export default function MultiLayerCanvas() {
     }
   };
 
-  // const handleVisualClick = () => {
-  //   const newDrawBlock = {
-  //     id: `drawBlock-${drawBlocks.length + 1}`,
-  //     position: { x: Math.random() * window.innerWidth * 0.8, y: Math.random() * window.innerHeight * 0.8 },
-  //   };
-  //   setDrawBlocks([...drawBlocks, newDrawBlock]);
-  //   saveHistory();
-  // };
-
-  const handleVisualClick = () => {
-    const newDrawBlock = {
-      id: `drawBlock-${drawBlocks.length + 1}`,
-      position: { x: window.innerWidth / 2, y: window.innerHeight / 2 },
-    };
-    setDrawBlocks([...drawBlocks, newDrawBlock]);
-    saveHistory();
-  };
-
-  const handleVisualDragStart = (e) => {
-    e.dataTransfer.setData('drawBlock', 'Block');
-  };
-
-  const handleVisualDrop = (e) => {
-    e.preventDefault();
-    const draggedItem = e.dataTransfer.getData('drawBlock');
-    if (draggedItem === 'Block') {
-      const newDrawBlock = {
-        id: `drawBlock-${drawBlocks.length + 1}`,
-        position: { x: e.clientX, y: e.clientY },
-      };
-      setDrawBlocks([...drawBlocks, newDrawBlock]);
-      saveHistory();
-    }
-  };
-
   const handleCreateBlock = () => {
     const newBlock = {
       id: `block-${blocks.length + 1}`,
@@ -248,11 +212,11 @@ export default function MultiLayerCanvas() {
         onMouseDown={handleMouseDown}
         onMouseMove={handleMouseMove} // Corrected casing
         onMouseUp={handleMouseUp} // Corrected casing
-        onVisualDrop={handleVisualDrop}
         onDrag={(e) => e.preventDefault()}
       >
         <Layer>
           <Text text='Static test' x={10} y={10} />
+
         </Layer>
         <Layer>
           <Whiteboard lines={lines} />
@@ -281,7 +245,7 @@ export default function MultiLayerCanvas() {
             text={text.text}
             position={text.position}
             isDragging={text.isDragging}
-            onDragStart={() => handleVisualDragStart(text.id)}
+            onDragStart={() => handleTextDragStart(text.id)}
             onDragEnd={(e) => handleTextDragEnd(text.id, e)}
           />
         ))}
