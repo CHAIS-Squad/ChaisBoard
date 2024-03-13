@@ -8,9 +8,9 @@ function CodeEditor() {
   const [language, setLanguage] = useState("python");
   const [indent, setIndent] = useState(2);
   const [autoComplete, setAutoComplete] = useState(true);
-  const [editorDocuments, setEditorDocuments] = useState(["document-0"]);
+  const [editorDocuments, setEditorDocuments] = useState(["editor-0"]);
   const [activeEditorDocument, setActiveEditorDocument] =
-    useState("document-0");
+    useState("editor-0");
 
   return (
     <div className="flex flex-col">
@@ -122,7 +122,7 @@ function EditorFooter({
   setActiveEditorDocument,
 }) {
   function createEditorDocument() {
-    const editorId = `document-${editorDocuments.length}`;
+    const editorId = `editor-${editorDocuments.length}`;
     setEditorDocuments([...editorDocuments, editorId]);
     setActiveEditorDocument(editorId)
   }
@@ -138,7 +138,7 @@ function EditorFooter({
     );
     setEditorDocuments(updatedEditorDocuments);
     if (editorId === activeEditorDocument) {
-      setActiveEditorDocument("document-0");
+      setActiveEditorDocument("editor-0");
     }
   }
 
@@ -163,7 +163,7 @@ function EditorFooter({
               >
                 {editorDocument}
               </span>
-              <span>
+              {editorDocument !== 'editor-0' ? (<span>
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
                   viewBox="0 0 20 20"
@@ -179,7 +179,7 @@ function EditorFooter({
                     className="cursor-pointer"
                   />
                 </svg>
-              </span>
+              </span>) : null}
             </li>
           );
         })}
