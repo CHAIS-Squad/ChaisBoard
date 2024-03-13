@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Stage, Layer, Text, Rect, Circle, Star } from 'react-konva';
+import { Stage, Layer, Text, Rect, Circle, Star, Transformer } from 'react-konva';
 import dynamic from 'next/dynamic';
 import Sidebar from './Sidebar';
 
@@ -25,6 +25,7 @@ export default function MultiLayerCanvas() {
   const [blocks, setBlocks] = useState([]);
   const [drawLines, setDrawLines] = useState([]);
   const [selectedShape, setSelectedShape] = useState('Rect');
+  const [selectedBlocks, setSelectedBlocks] = useState([]);
   const isDrawing = useRef(false);
   const [history, setHistory] = useState([...shapes]);
   const [historyStep, setHistoryStep] = useState(0);
@@ -283,6 +284,7 @@ export default function MultiLayerCanvas() {
         </Layer>
         {blocks.map((block) => (
           <Layer key={block.id}>
+
             <DrawBlock
               id={block.id}
               position={block.position}
@@ -292,6 +294,21 @@ export default function MultiLayerCanvas() {
               onDragStart={handleDragStart} 
               onDragEnd={handleBlockDragEnd}
               updateLocalLines={(newLines) => handleUpdateLocalLines(block.id, newLines)}
+            />
+            <Transformer
+              ref={transformerRef}
+              boundBoxFunc={(oldBox, newBox) => {
+                // Ensure the transformer doesn't go outside the stage
+                if (
+                  newBox.x < 0 ||
+                  newBox.y < 0 ||
+                  newBox.x + newBox.width > width ||
+                  newBox.y + newBox.height > height
+                ) {
+                  return oldBox;
+                }
+                return newBox;
+              }}
             />
           </Layer>
         ))}

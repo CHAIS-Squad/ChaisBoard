@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Stage, Layer, Rect, Group, Line, Text } from 'react-konva';
+import { Stage, Layer, Rect, Group, Line, Text, Transformer } from 'react-konva';
 
 const DrawBlock = ({
   id,
@@ -14,7 +14,15 @@ const DrawBlock = ({
   const [localLines, setLocalLines] = useState([])
   const [drawing, setDrawing] = useState(false);
   const [shiftPressed, setShiftPressed] = useState(false);
+  const [transformerProps, setTransformerProps] = useState({
+    // Initial transformer properties
+    x: position.x,
+    y: position.y,
+    scaleX: 1,
+    scaleY: 1,
+  });
   const groupRef = useRef();
+  const transformerRef = useRef();
 
   const blockWidth = 300;
   const blockHeight = 300;
@@ -51,6 +59,13 @@ const DrawBlock = ({
     return () => window.removeEventListener('mouseup', handleGlobalMouseUp);
   }, []);
 
+  useEffect(() => {
+    if (transformerRef.current && drawing) {
+      transformerRef.current.setAttrs(transformerProps);
+    }
+  }, [transformerProps, drawing]);
+  
+
   const handleMouseDown = (e) => {
     if (!shiftPressed) {
       setDrawing(true);
@@ -70,6 +85,7 @@ const DrawBlock = ({
     }
   };
 
+  
 
   // Handler for ending the drawing
   const handleMouseUp = () => {
@@ -90,7 +106,6 @@ const DrawBlock = ({
       }}
     >
       {/* Background rectangle for drawing */}
-      
       <Rect
         width={blockWidth}
         height={blockHeight}
@@ -115,6 +130,24 @@ const DrawBlock = ({
           lineJoin="round"
         />
       ))}
+      {drawing && (
+        <Transformer
+          {...transformerProps}
+          ref={transformerRef}
+          boundBoxFunc={(oldBox, newBox) => {
+            // Ensure the transformer doesn't go outside the stage
+            if (
+              newBox.x < 0 ||
+              newBox.y < 0 ||
+              newBox.x + newBox.width > width ||
+              newBox.y + newBox.height > height
+            ) {
+              return oldBox;
+            }
+            return newBox;
+          }}
+        />
+      )}
     </Group>
   );
 };
