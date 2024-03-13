@@ -5,6 +5,7 @@ export default function TextEditor({
   id,
   text,
   position,
+  color,
   isDragging,
   onDragStart,
   onDragEnd,
@@ -33,20 +34,35 @@ export default function TextEditor({
 
       // Handles entering edits
       // Currently requires enter key to post edit.
-      textarea.addEventListener('keydown', (e) => {
+      const handleKeyDown = (e) => {
         if (e.key === 'Enter') {
           onUpdate(id, textarea.value);
-          // Removes text area upon enter to give illusion of base text changing directly.
           document.body.removeChild(textarea);
         }
-      });
+      };
+
+      // Function to handle click outside of textarea
+      const handleOutsideClick = (e) => {
+        if (e.target !== textarea) {
+          onUpdate(id, textarea.value);
+          document.body.removeChild(textarea);
+        }
+      };
+
+      textarea.addEventListener('keydown', handleKeyDown);
+      // Add click listener to the document to detect clicks outside the textarea
+      document.addEventListener('click', handleOutsideClick);
+
       return () => {
+        // Cleanup both event listeners
+        textarea.removeEventListener('keydown', handleKeyDown);
+        document.removeEventListener('click', handleOutsideClick);
         if (document.body.contains(textarea)) {
           document.body.removeChild(textarea);
         }
       };
     }
-  }, [editing]);
+  }, [editing, id, onUpdate, text, position]);
 
   return (
     <Group>
@@ -54,6 +70,7 @@ export default function TextEditor({
         x={position.x}
         y={position.y}
         text={editing ? '' : text}
+        fill={color}
         draggable
         onDragStart={editing ? null : onDragStart}
         onDragEnd={editing ? null : onDragEnd}

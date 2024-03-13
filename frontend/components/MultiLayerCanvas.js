@@ -24,6 +24,7 @@ export default function MultiLayerCanvas() {
   const [history, setHistory] = useState([...shapes]);
   const [historyStep, setHistoryStep] = useState(0);
   const [texts, setTexts] = useState([]);
+  const [currentColor, setCurrentColor] = useState('#000000');
 
   // console.log('Current texts state:', texts);
   // console.log('Current selectedShape state:', selectedShape);
@@ -47,24 +48,26 @@ export default function MultiLayerCanvas() {
   }, [lines, shapes]);
 
   const handleMouseDown = (e) => {
-    // Check if the event target is the Stage to only start drawing if clicking on empty space
     if (e.target === e.target.getStage()) {
       isDrawing.current = true;
-      setLines((prevLines) => [...prevLines, []]);
+      // Start a new line with the current color
+      const newLine = { points: [], color: currentColor };
+      setLines((prevLines) => [...prevLines, newLine]);
       saveHistory();
     }
   };
 
   const handleMouseMove = (e) => {
     if (!isDrawing.current) return;
-
+  
     const stage = e.target.getStage();
     const point = stage.getPointerPosition();
-    let lastLine = lines[lines.length - 1];
-    if (lastLine) {
-      lastLine = [...lastLine, point.x, point.y];
-      setLines(lines.slice(0, -1).concat([lastLine]));
-    }
+    setLines((prevLines) => {
+      const lastLine = { ...prevLines[prevLines.length - 1] };
+      lastLine.points = [...lastLine.points, point.x, point.y]; // Add new points to the current line
+  
+      return [...prevLines.slice(0, -1), lastLine]; // Update the lines array with the modified last line
+    });
   };
 
   const handleMouseUp = () => {
@@ -192,14 +195,15 @@ export default function MultiLayerCanvas() {
       id: `text-${texts.length}`, // Ensuring each text has a unique ID
       position: { x: 200, y: texts.length * 20 + 100 },
       text: 'New Text',
+      color: currentColor,
       isDragging: false,
       isEditing: false,
     };
     setTexts((prevTexts) => [...prevTexts, newText]);
     saveHistory();
   };
-  
-   // import canvas template
+
+  // import canvas template
   function importTemplate(templateObjects) {
     for (const templateObject of templateObjects.shapes) {
       templateObject.id += `-${shapes.length}`;
@@ -207,7 +211,6 @@ export default function MultiLayerCanvas() {
       saveHistory();
     }
   }
-
 
   return (
     <>
@@ -219,6 +222,8 @@ export default function MultiLayerCanvas() {
         handleRedo={handleRedo}
         addText={addText}
         importTemplate={importTemplate}
+        currentColor={currentColor}
+        setCurrentColor={setCurrentColor}
       />
 
       <Stage
@@ -240,6 +245,7 @@ export default function MultiLayerCanvas() {
               id={text.id}
               text={text.text}
               position={text.position}
+              color={text.color}
               isDragging={text.isDragging}
               editing={text.isEditing}
               onDragStart={() => handleTextDragStart(text.id)}
