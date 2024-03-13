@@ -48,24 +48,26 @@ export default function MultiLayerCanvas() {
   }, [lines, shapes]);
 
   const handleMouseDown = (e) => {
-    // Check if the event target is the Stage to only start drawing if clicking on empty space
     if (e.target === e.target.getStage()) {
       isDrawing.current = true;
-      setLines((prevLines) => [...prevLines, []]);
+      // Start a new line with the current color
+      const newLine = { points: [], color: currentColor };
+      setLines((prevLines) => [...prevLines, newLine]);
       saveHistory();
     }
   };
 
   const handleMouseMove = (e) => {
     if (!isDrawing.current) return;
-
+  
     const stage = e.target.getStage();
     const point = stage.getPointerPosition();
-    let lastLine = lines[lines.length - 1];
-    if (lastLine) {
-      lastLine = [...lastLine, point.x, point.y];
-      setLines(lines.slice(0, -1).concat([lastLine]));
-    }
+    setLines((prevLines) => {
+      const lastLine = { ...prevLines[prevLines.length - 1] };
+      lastLine.points = [...lastLine.points, point.x, point.y]; // Add new points to the current line
+  
+      return [...prevLines.slice(0, -1), lastLine]; // Update the lines array with the modified last line
+    });
   };
 
   const handleMouseUp = () => {
