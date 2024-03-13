@@ -24,6 +24,22 @@ export default function MultiLayerCanvas() {
     { id: 'text1', position: { x: 210, y: 50 }, text: 'Drag me!', isDragging: false },
   ]);
 
+  const handleUndo = () => {
+    if (historyStep > 0) {
+      setHistoryStep(historyStep - 1);
+      setShapes(history[historyStep - 1].shapes);
+      setLines(history[historyStep - 1].lines);
+    }
+  };
+
+  const handleRedo = () => {
+    if (historyStep < history.length - 1) {
+      setHistoryStep(historyStep + 1);
+      setShapes(history[historyStep + 1].shapes);
+      setLines(history[historyStep + 1].lines);
+    }
+  };
+
   useEffect(() => {
     const handleKeyDown = (e) => {
       if ((e.ctrlKey || e.metaKey) && e.key === 'z') {
@@ -85,21 +101,7 @@ export default function MultiLayerCanvas() {
     setHistoryStep(historyStep + 1);
   };
 
-  const handleUndo = () => {
-    if (historyStep > 0) {
-      setHistoryStep(historyStep - 1);
-      setShapes(history[historyStep - 1].shapes);
-      setLines(history[historyStep - 1].lines);
-    }
-  };
-
-  const handleRedo = () => {
-    if (historyStep < history.length - 1) {
-      setHistoryStep(historyStep + 1);
-      setShapes(history[historyStep + 1].shapes);
-      setLines(history[historyStep + 1].lines);
-    }
-  };
+  
 
   const width = window.innerWidth;
   const height = window.innerHeight;

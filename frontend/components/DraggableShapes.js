@@ -12,9 +12,9 @@ const DraggableShapes = dynamic(() => import('../components/DraggableShapes'), {
 const DraggableText = dynamic(() => import('../components/DraggableText'), {
   ssr: false,
 });
-const TextEditor = dynamic(() => import('../components/TextEditor'), {
-  ssr: false,
-});
+// const TextEditor = dynamic(() => import('../components/TextEditor'), {
+//   ssr: false,
+// });
 
 export default function MultiLayerCanvas() {
   const [lines, setLines] = useState([]);
