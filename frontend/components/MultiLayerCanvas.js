@@ -25,9 +25,31 @@ export default function MultiLayerCanvas() {
   const [historyStep, setHistoryStep] = useState(0);
   const [texts, setTexts] = useState([]);
   const [currentColor, setCurrentColor] = useState('#000000');
+  const [selection, setSelection] = useState({ type: null, id: null });
 
-  // console.log('Current texts state:', texts);
-  // console.log('Current selectedShape state:', selectedShape);
+  const selectElement = (type, id) => {
+    setSelection({ type, id });
+
+    // Check if a text element is selected and toggle its editing mode
+    if (type === 'text') {
+      const updatedTexts = texts.map((text) => {
+        if (text.id === id) {
+          return { ...text, isEditing: true }; // Enable editing mode for the selected text
+        }
+        return { ...text, isEditing: false }; // Ensure other texts are not in editing mode
+      });
+      setTexts(updatedTexts);
+    }
+  };
+
+  const deselectElement = () => {
+    // Deselect all elements
+    setSelection({ type: null, id: null });
+
+    // Exit editing mode for all texts
+    const updatedTexts = texts.map((text) => ({ ...text, isEditing: false }));
+    setTexts(updatedTexts);
+  };
 
   useEffect(() => {
     const handleKeyDown = (e) => {
@@ -59,13 +81,13 @@ export default function MultiLayerCanvas() {
 
   const handleMouseMove = (e) => {
     if (!isDrawing.current) return;
-  
+
     const stage = e.target.getStage();
     const point = stage.getPointerPosition();
     setLines((prevLines) => {
       const lastLine = { ...prevLines[prevLines.length - 1] };
       lastLine.points = [...lastLine.points, point.x, point.y]; // Add new points to the current line
-  
+
       return [...prevLines.slice(0, -1), lastLine]; // Update the lines array with the modified last line
     });
   };
@@ -179,16 +201,23 @@ export default function MultiLayerCanvas() {
     setTexts(updatedTexts);
   };
 
-  const handleTextUpdate = (textId, newText) => {
+  const handleTextUpdate = (textId, updateProps) => {
     const updatedTexts = texts.map((text) => {
       if (text.id === textId) {
-        return { ...text, text: newText, isEditing: false };
+        // Spread existing text properties, then override with any updates
+        return {
+          ...text,
+          ...updateProps, // Apply updates, which may include text, fontSize, and/or position
+          position: { ...text.position, ...updateProps.position }, // Ensure position updates are merged
+          isEditing: false // Ensure we exit editing mode
+        };
       }
       return text;
     });
+    
     setTexts(updatedTexts);
     saveHistory();
-  };
+};
 
   const addText = () => {
     const newText = {
@@ -202,14 +231,45 @@ export default function MultiLayerCanvas() {
     setTexts((prevTexts) => [...prevTexts, newText]);
     saveHistory();
   };
-
+  
   // import canvas template
   function importTemplate(templateObjects) {
-    for (const templateObject of templateObjects.shapes) {
-      templateObject.id += `-${shapes.length}`;
-      setShapes((prevShapes) => [...prevShapes, templateObject]);
+    let shapeID = shapes.length;
+    for (const templateShape of templateObjects.shapes) {
+      const newShape = {
+        ...templateShape,
+        id: `${templateShape.shapeType}-${shapeID}`,
+      };
+      setShapes((prevShapes) => [...prevShapes, newShape]);
+      saveHistory();
+      shapeID += 1;
+    }
+    for (const templateText of templateObjects.texts) {
+      const newText = {
+        ...templateText,
+        id: `text-${texts.length}`,
+      };
+      setTexts((prevTexts) => [...prevTexts, newText]);
       saveHistory();
     }
+    // for (const templateLine of templateObjects.lines) {
+    //   const newLine = {
+    //     ...templateLine,
+    //     id: `line-${lines.length}`,
+    //   };
+    //   setLines((prevLines) => [...prevLines, newLine]);
+    //   saveHistory();
+    // }
+  }
+
+  // export canvas template
+  function exportTemplate() {
+    const templateObjects = {
+      shapes: shapes,
+      texts: texts,
+      lines: lines,
+    };
+    return templateObjects;
   }
 
   return (
@@ -222,6 +282,7 @@ export default function MultiLayerCanvas() {
         handleRedo={handleRedo}
         addText={addText}
         importTemplate={importTemplate}
+        exportTemplate={exportTemplate}
         currentColor={currentColor}
         setCurrentColor={setCurrentColor}
       />
@@ -229,7 +290,12 @@ export default function MultiLayerCanvas() {
       <Stage
         width={width}
         height={height}
-        onMouseDown={handleMouseDown}
+        onMouseDown={(e) => {
+          if (e.target === e.target.getStage()) {
+            deselectElement();
+          }
+          handleMouseDown(e);
+        }}
         onMouseMove={handleMouseMove}
         onMouseUp={handleMouseUp}
         
@@ -247,12 +313,17 @@ export default function MultiLayerCanvas() {
               text={text.text}
               position={text.position}
               color={text.color}
-              isDragging={text.isDragging}
-              editing={text.isEditing}
+              fontSize={text.fontSize}
+              editing={
+                text.isEditing &&
+                selection.type === 'text' &&
+                selection.id === text.id
+              }
               onDragStart={() => handleTextDragStart(text.id)}
               onDragEnd={(e) => handleTextDragEnd(text.id, e)}
-              onDoubleClick={() => handleTextDoubleClick(text.id)}
+              onDoubleClick={() => selectElement('text', text.id)}
               onUpdate={(id, newText) => handleTextUpdate(id, newText)}
+              isSelected={selection.type === 'text' && selection.id === text.id}
             />
           </Layer>
         ))}
