@@ -227,6 +227,8 @@ export default function MultiLayerCanvas() {
               id={block.id}
               position={block.position}
               lines={block.lines}
+              handleUndo={handleUndo}
+              handleRedo={handleRedo}
               onCreate={handleCreateBlock} 
               onDragStart={handleDragStart} 
               onDragEnd={handleBlockDragEnd}
