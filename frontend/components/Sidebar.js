@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import useCanvasTemplates from '@/api/canvas-templates';
-import { CirclePicker, HuePicker } from 'react-color';
+import ColorPickerModal from './ColorPickerModal';
 
 const Sidebar = ({ selectedShape, setSelectedShape, addShape, handleUndo, handleRedo, addText, importTemplate, currentColor, setCurrentColor }) => {
 
@@ -16,14 +16,7 @@ const Sidebar = ({ selectedShape, setSelectedShape, addShape, handleUndo, handle
       <button onClick={handleRedo}>Redo</button>
       <TemplatesToolbar importTemplate={importTemplate} />
       <button onClick={addText}>Add Text</button>
-      <CirclePicker
-        color={currentColor}
-        onChangeComplete={(color) => setCurrentColor(color.hex)}
-      />
-      <HuePicker
-        color={currentColor}
-        onChangeComplete={(color) => setCurrentColor(color.hex)}
-      />
+      <ColorPickerModal currentColor={currentColor} setCurrentColor={setCurrentColor} />
     </div>
   );
 };
