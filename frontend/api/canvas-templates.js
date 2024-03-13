@@ -40,7 +40,23 @@ function useCanvasTemplates() {
     }
   }
 
-  return { getCanvasTemplate, getCanvasTemplatesList, createCanvasTemplate };
+  async function deleteCanvasTemplate(templateId) {
+    try {
+      await fetch(`${apiUrl}/${templateId}`, {
+        method: "DELETE",
+        ...options,
+      });
+    } catch (error) {
+      handleError(error);
+    }
+  }
+
+  return {
+    getCanvasTemplate,
+    getCanvasTemplatesList,
+    createCanvasTemplate,
+    deleteCanvasTemplate,
+  };
 }
 
 function handleError(error) {

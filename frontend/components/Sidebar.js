@@ -20,7 +20,12 @@ const Sidebar = ({ selectedShape, setSelectedShape, addShape, handleUndo, handle
 };
 
 function TemplatesToolbar({ importTemplate, exportTemplate }) {
-  const { getCanvasTemplate, getCanvasTemplatesList, createCanvasTemplate } = useCanvasTemplates();
+  const {
+    getCanvasTemplate,
+    getCanvasTemplatesList,
+    createCanvasTemplate,
+    deleteCanvasTemplate,
+  } = useCanvasTemplates();
   const [templates, setTemplates] = useState([]);
   const [selectedTemplate, setSelectedTemplate] = useState({});
 
@@ -35,35 +40,47 @@ function TemplatesToolbar({ importTemplate, exportTemplate }) {
 
   async function retrieveTemplate(event) {
     const templateId = event.target.value;
-    if (templateId === 'create' || templateId === 'select') {
+    if (templateId === "create" || templateId === "select") {
       setSelectedTemplate(templateId);
     } else {
       const response = await getCanvasTemplate(templateId);
-    setSelectedTemplate(response);
+      setSelectedTemplate(response);
     }
-  }
-
-  function handleAddTemplate() {
-    importTemplate(selectedTemplate.konva_objects);
   }
 
   async function handleCreateTemplate(event) {
     event.preventDefault();
     const newTemplateName = event.target.newTemplateName.value;
     const templateNames = templates.map((template) => template.name);
-    if (newTemplateName === '' || templateNames.includes(newTemplateName)) {
-      alert('Template name not available. Please choose a different name.');
+    if (newTemplateName === "" || templateNames.includes(newTemplateName)) {
+      alert("Template name not available. Please choose a different name.");
     } else {
       const templateObjects = exportTemplate();
       const newCanvasTemplate = {
         name: newTemplateName,
-        description: 'to do',
+        description: "to do",
         konva_objects: templateObjects,
-      }
+      };
       const response = await createCanvasTemplate(newCanvasTemplate);
       setSelectedTemplate(response);
     }
     event.target.reset();
+  }
+
+  async function handleDeleteTemplate() {
+    const confirm = window.confirm(
+      `Are you sure you want to delete the template "${selectedTemplate.name}"?`
+    );
+    if (confirm) {
+      await deleteCanvasTemplate(selectedTemplate.id);
+      setSelectedTemplate({});
+    } else {
+      alert("Template was not deleted.");
+    }
+  }
+
+  function handleAddTemplate() {
+    importTemplate(selectedTemplate.konva_objects);
   }
 
   return (
@@ -92,11 +109,22 @@ function TemplatesToolbar({ importTemplate, exportTemplate }) {
         </button>
       </div>
 
-      <form onSubmit={handleCreateTemplate} className={`flex flex-col ${selectedTemplate === 'create' ? 'block' : 'hidden'}`}>
+      <form
+        onSubmit={handleCreateTemplate}
+        className={`flex flex-col ${
+          selectedTemplate === "create" ? "block" : "hidden"
+        }`}
+      >
         <label htmlFor="newTemplateName">Template Name:</label>
-        <input name='newTemplateName' type="text" className='border-2' />
-        <button type='submit'>Create Template</button>
+        <input name="newTemplateName" type="text" className="border-2" />
+        <button type="submit">Create Template</button>
       </form>
+
+      <div
+        className={`flex flex-col ${selectedTemplate.id ? "block" : "hidden"}`}
+      >
+        <button onClick={handleDeleteTemplate}>Delete Template</button>
+      </div>
     </div>
   );
 }
