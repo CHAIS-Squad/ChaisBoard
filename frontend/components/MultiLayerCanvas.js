@@ -12,6 +12,9 @@ const DraggableShapes = dynamic(() => import('../components/DraggableShapes'), {
 const DraggableText = dynamic(() => import('../components/DraggableText'), {
   ssr: false,
 });
+const TextEditor = dynamic(() => import('../components/TextEditor'), {
+  ssr: false,
+});
 
 export default function MultiLayerCanvas() {
   const [lines, setLines] = useState([]);
@@ -20,13 +23,10 @@ export default function MultiLayerCanvas() {
   const isDrawing = useRef(false);
   const [history, setHistory] = useState([...shapes]);
   const [historyStep, setHistoryStep] = useState(0);
-  const [texts, setTexts] = useState([
-    { id: 'text1', position: { x: 210, y: 50 }, text: 'Drag me!', isDragging: false },
-  ]);
-  
+  const [texts, setTexts] = useState([]);
 
-  console.log('Current texts state:', texts);
-  console.log('Current selectedShape state:', selectedShape);
+  // console.log('Current texts state:', texts);
+  // console.log('Current selectedShape state:', selectedShape);
 
   useEffect(() => {
     const handleKeyDown = (e) => {
@@ -166,6 +166,39 @@ export default function MultiLayerCanvas() {
     }
   };
 
+  const handleTextDoubleClick = (textId) => {
+    const updatedTexts = texts.map((text) => {
+      if (text.id === textId) {
+        return { ...text, isEditing: true };
+      }
+      return text;
+    });
+    setTexts(updatedTexts);
+  };
+
+  const handleTextUpdate = (textId, newText) => {
+    const updatedTexts = texts.map((text) => {
+      if (text.id === textId) {
+        return { ...text, text: newText, isEditing: false };
+      }
+      return text;
+    });
+    setTexts(updatedTexts);
+    saveHistory();
+  };
+
+  const addText = () => {
+    const newText = {
+      id: `text-${texts.length}`, // Ensuring each text has a unique ID
+      position: { x: 200, y: texts.length * 20 + 100 },
+      text: 'New Text',
+      isDragging: false,
+      isEditing: false,
+    };
+    setTexts((prevTexts) => [...prevTexts, newText]);
+    saveHistory();
+  };
+
   return (
     <>
       <Sidebar
@@ -174,19 +207,16 @@ export default function MultiLayerCanvas() {
         addShape={addShape}
         handleUndo={handleUndo}
         handleRedo={handleRedo}
+        addText={addText}
       />
 
       <Stage
         width={width}
         height={height}
         onMouseDown={handleMouseDown}
-        onMouseMove={handleMouseMove} // Corrected casing
-        onMouseUp={handleMouseUp} // Corrected casing
+        onMouseMove={handleMouseMove}
+        onMouseUp={handleMouseUp}
       >
-        <Layer>
-          <Text text='Static test' x={10} y={10} />
-          {/* Your dynamic DraggableText components */}
-        </Layer>
         <Whiteboard lines={lines} />
         <DraggableShapes
           shapes={shapes}
@@ -194,14 +224,19 @@ export default function MultiLayerCanvas() {
           onDragEnd={handleDragEnd}
         />
         {texts.map((text) => (
-          <DraggableText
-            key={text.id}
-            text={text.text}
-            position={text.position}
-            isDragging={text.isDragging}
-            onDragStart={() => handleTextDragStart(text.id)}
-            onDragEnd={(e) => handleTextDragEnd(text.id, e)}
-          />
+          <Layer key={text.id}>
+            <TextEditor
+              id={text.id}
+              text={text.text}
+              position={text.position}
+              isDragging={text.isDragging}
+              editing={text.isEditing}
+              onDragStart={() => handleTextDragStart(text.id)}
+              onDragEnd={(e) => handleTextDragEnd(text.id, e)}
+              onDoubleClick={() => handleTextDoubleClick(text.id)}
+              onUpdate={(id, newText) => handleTextUpdate(id, newText)}
+            />
+          </Layer>
         ))}
       </Stage>
     </>
