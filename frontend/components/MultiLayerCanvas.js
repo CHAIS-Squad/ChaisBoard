@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Stage, Layer, Text, Rect, Circle, Star } from 'react-konva';
+import { Stage, Layer, Text, Polygon, Star, RegularPolygon } from 'react-konva';
 import dynamic from 'next/dynamic';
 import Sidebar from './Sidebar';
 
@@ -18,15 +18,11 @@ export default function MultiLayerCanvas() {
   const [shapes, setShapes] = useState([]);
   const [selectedShape, setSelectedShape] = useState('Rect');
   const isDrawing = useRef(false);
-  const [history, setHistory] = useState([...shapes]);
+  const [history, setHistory] = useState([]);
   const [historyStep, setHistoryStep] = useState(0);
   const [texts, setTexts] = useState([
     { id: 'text1', position: { x: 210, y: 50 }, text: 'Drag me!', isDragging: false },
   ]);
-  
-
-  console.log('Current texts state:', texts);
-  console.log('Current selectedShape state:', selectedShape);
 
   useEffect(() => {
     const handleKeyDown = (e) => {
@@ -44,10 +40,9 @@ export default function MultiLayerCanvas() {
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
     };
-  }, [lines, shapes]);
+  }, [lines, shapes, handleUndo, handleRedo]);
 
   const handleMouseDown = (e) => {
-    // Check if the event target is the Stage to only start drawing if clicking on empty space
     if (e.target === e.target.getStage()) {
       isDrawing.current = true;
       setLines((prevLines) => [...prevLines, []]);
@@ -71,15 +66,14 @@ export default function MultiLayerCanvas() {
     isDrawing.current = false;
   };
 
-  // Function to add a new shape based on the selected type
   const addShape = () => {
     const newShape = {
-      id: `${selectedShape}-${shapes.length}`, // Use selectedShape instead of selectedShapeType
-      shapeType: selectedShape, // This correctly refers to the state variable holding the selected shape type
+      id: `${selectedShape}-${shapes.length}`,
+      shapeType: selectedShape,
       x: Math.max(210, Math.random() * window.innerWidth * 0.8),
       y: Math.random() * window.innerHeight * 0.8,
       rotation: Math.random() * 180,
-      isDragging: false, // Initial dragging state is false
+      isDragging: false,
     };
     setShapes((prevShapes) => [...prevShapes, newShape]);
     saveHistory();
@@ -143,7 +137,6 @@ export default function MultiLayerCanvas() {
   };
 
   const handleTextDragEnd = (textId, e) => {
-    // Ensure e.target is defined and has .x() and .y() methods
     if (
       e.target &&
       typeof e.target.x === 'function' &&
@@ -151,7 +144,6 @@ export default function MultiLayerCanvas() {
     ) {
       const updatedTexts = texts.map((text) => {
         if (text.id === textId) {
-          // Use e.target.x() and e.target.y() to get the new position
           return {
             ...text,
             position: { x: e.target.x(), y: e.target.y() },
@@ -180,12 +172,11 @@ export default function MultiLayerCanvas() {
         width={width}
         height={height}
         onMouseDown={handleMouseDown}
-        onMouseMove={handleMouseMove} // Corrected casing
-        onMouseUp={handleMouseUp} // Corrected casing
+        onMouseMove={handleMouseMove}
+        onMouseUp={handleMouseUp}
       >
         <Layer>
           <Text text='Static test' x={10} y={10} />
-          {/* Your dynamic DraggableText components */}
         </Layer>
         <Whiteboard lines={lines} />
         <DraggableShapes
