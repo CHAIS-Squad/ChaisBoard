@@ -1,5 +1,5 @@
 import React from 'react';
-import { Layer, Star, Circle, Rect, Arrow,Transformer } from 'react-konva';
+import { Layer, Star, Circle, Rect, Arrow, Transformer } from 'react-konva';
 
 export default function DraggableShapes({ shapes, onDragStart, onDragEnd }) {
   return (

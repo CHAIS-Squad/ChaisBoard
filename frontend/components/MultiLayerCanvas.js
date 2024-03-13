@@ -136,7 +136,7 @@ export default function MultiLayerCanvas() {
   const width = window.innerWidth;
   const height = window.innerHeight;
 
-  const handleDragStart = (shapeId) => {
+  const handleShapeDragStart = (shapeId) => {
     const updatedShapes = shapes.map((shape) => {
       if (shape.id === shapeId) {
         return { ...shape, isDragging: true };
@@ -147,7 +147,7 @@ export default function MultiLayerCanvas() {
     saveHistory();
   };
 
-  const handleDragEnd = (shapeId, newPos) => {
+  const handleShapeDragEnd = (shapeId, newPos) => {
     const updatedShapes = shapes.map((shape) => {
       if (shape.id === shapeId) {
         return { ...shape, ...newPos, isDragging: false };
@@ -304,8 +304,10 @@ export default function MultiLayerCanvas() {
         <Whiteboard lines={lines} />
         <DraggableShapes
           shapes={shapes}
-          onDragStart={handleDragStart}
-          onDragEnd={handleDragEnd}
+          onDragStart={handleShapeDragStart}
+          onDragEnd={handleShapeDragEnd}
+          selection={selection}
+          setSelection={setSelection}
         />
         {texts.map((text) => (
           <Layer key={text.id}>
