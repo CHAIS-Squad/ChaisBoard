@@ -10,4 +10,4 @@ class CanvasTemplateSerializer(serializers.ModelSerializer):
 class CanvasTemplateListSerializer(serializers.ModelSerializer):
     class Meta:
         model = CanvasTemplate
-        fields = 'name', 'id'
+        fields = 'name', 'id', 'description'
