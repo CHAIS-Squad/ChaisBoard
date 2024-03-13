@@ -12,11 +12,10 @@ const DraggableShapes = dynamic(() => import('../components/DraggableShapes'), {
 const DraggableText = dynamic(() => import('../components/DraggableText'), {
   ssr: false,
 });
-<<<<<<< HEAD
 const DrawBlock = dynamic(() => import('../components/DrawBlock'), {
-=======
+  ssr: false,
+});
 const TextEditor = dynamic(() => import('../components/TextEditor'), {
->>>>>>> e594bb3acf728d61089c8f2f0bf37a167a239d94
   ssr: false,
 });
 
@@ -28,21 +27,8 @@ export default function MultiLayerCanvas() {
   const isDrawing = useRef(false);
   const [history, setHistory] = useState([...shapes]);
   const [historyStep, setHistoryStep] = useState(0);
-<<<<<<< HEAD
-  const [texts, setTexts] = useState([
-    {
-      id: 'text1',
-      position: { x: 210, y: 50 },
-      text: 'Drag me!',
-      isDragging: false,
-    },
-  ]);
-
-
-=======
   const [texts, setTexts] = useState([]);
 
->>>>>>> e594bb3acf728d61089c8f2f0bf37a167a239d94
   // console.log('Current texts state:', texts);
   // console.log('Current selectedShape state:', selectedShape);
 
