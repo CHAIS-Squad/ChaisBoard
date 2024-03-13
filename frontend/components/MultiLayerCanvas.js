@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Stage, Layer, Text, Rect, Circle, Star } from 'react-konva';
+import { Stage, Layer, Text, Rect, Circle, Star, Arrow } from 'react-konva';
 import dynamic from 'next/dynamic';
 import Sidebar from './Sidebar';
 
@@ -232,6 +232,7 @@ export default function MultiLayerCanvas() {
         onMouseDown={handleMouseDown}
         onMouseMove={handleMouseMove}
         onMouseUp={handleMouseUp}
+        
       >
         <Whiteboard lines={lines} />
         <DraggableShapes
