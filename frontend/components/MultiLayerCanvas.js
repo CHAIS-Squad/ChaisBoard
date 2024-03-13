@@ -217,7 +217,7 @@ export default function MultiLayerCanvas() {
     };
     const newBlocks = [...blocks, newBlock];
     setBlocks(newBlocks);
-    console.log('New blocks:', newBlocks); // Check the console to see if this logs the updated array
+    saveHistory();
   };
   
   const handleBlockDragEnd = (id, newPos) => {
@@ -228,6 +228,7 @@ export default function MultiLayerCanvas() {
       return block;
     });
     setBlocks(updatedBlocks);
+    saveHistory();
   };
 
   return (

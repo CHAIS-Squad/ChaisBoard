@@ -1,68 +1,3 @@
-// import React, { useState, useRef  } from 'react';
-// import { Stage, Layer, Text, Rect, Group, Line } from 'react-konva';
-// import Whiteboard from './Whiteboard';
-
-// export default function CanvasBlock() {
-//   const [lines, setLines] = useState([]);
-//   const [isDrawing, setIsDrawing] = useState(false);
-//   const stageRef = useRef();
-//   const [position, setPosition] = useState({ x: 100, y: 100 });
-//   const cardWidth = 300;
-//   const cardHeight = 200;
-
-//   const handleDragMove = (e) => {
-//     setPosition({
-//       x: e.target.x(),
-//       y: e.target.y(),
-//     });
-//   };
-
-//   const handleMouseDown = () => {
-//     setLines((prevLines) => [...prevLines, []]);
-//   };
-
-//   const handleMouseMove = (e) => {
-//     const point = e.target.getStage().getPointerPosition();
-//     let lastLine = lines[lines.length - 1];
-//     if (lastLine) {
-//       lastLine = [...lastLine, point.x, point.y];
-//       setLines(lines.slice(0, -1).concat([lastLine]));
-//     }
-//   };
-
-//   return (
-//     <>
-
-//       {/* <Layer>
-//         <Group x={position.x} y={position.y} onDragMove={handleDragMove}>
-//           <Rect width={cardWidth} height={cardHeight} fill="#f0f0f0" cornerRadius={10} />
-//         </Group>
-//       </Layer>
-//       <Layer>
-//         {lines.map((line, index) => (
-//           <Line
-//             key={index}
-//             points={line}
-//             stroke="black"
-//             strokeWidth={5}
-//             lineCap="round"
-//             lineJoin="round"
-//           />
-//         ))}
-//       </Layer>
-//       <Layer>
-//         <Rect
-//           width={cardWidth}
-//           height={cardHeight}
-//           fill="transparent"
-//           onMouseDown={handleMouseDown}
-//           onMouseMove={handleMouseMove}
-//         />
-//       </Layer> */}
-//     </>
-//   );
-// };
-
 import React, { useState, useRef, useEffect } from 'react';
 import { Stage, Layer, Rect, Group, Line, Text } from 'react-konva';
 import Whiteboard from './Whiteboard';
@@ -78,47 +13,63 @@ const DrawBlock = ({
 }) => {
   const [localLines, setLocalLines] = useState(lines || []);
   const [drawing, setDrawing] = useState(false);
+  const [shiftPressed, setShiftPressed] = useState(false);
   const groupRef = useRef();
 
   const blockWidth = 300;
   const blockHeight = 300;
 
   useEffect(() => {
-    // Function to stop drawing
-    const stopDrawing = () => {
-      if (drawing) {
-        setDrawing(false);
+    // Handlers to set the shiftPressed state based on key events
+    const handleKeyDown = (e) => {
+      if (e.key === 'Shift') {
+        setShiftPressed(true);
+        setDrawing(false); // Optionally ensure drawing is disabled when Shift is pressed
       }
     };
 
-    // Attach event listener to the window for mouse up events
-    window.addEventListener('mouseup', stopDrawing);
-
-    // Cleanup function to remove the event listener
-    return () => {
-      window.removeEventListener('mouseup', stopDrawing);
+    const handleKeyUp = (e) => {
+      if (e.key === 'Shift') {
+        setShiftPressed(false);
+        // Do not automatically set drawing to true here to avoid unintended drawing
+      }
     };
-  }, [drawing]); // Depend on the drawing state to add or remove the listener as needed
+
+    window.addEventListener('keydown', handleKeyDown);
+    window.addEventListener('keyup', handleKeyUp);
+
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+      window.removeEventListener('keyup', handleKeyUp);
+    };
+  }, []);
+
+  useEffect(() => {
+    // Function to handle global mouse up, stops drawing
+    const handleGlobalMouseUp = () => setDrawing(false);
+    window.addEventListener('mouseup', handleGlobalMouseUp);
+    return () => window.removeEventListener('mouseup', handleGlobalMouseUp);
+  }, []);
 
   const handleMouseDown = (e) => {
-    const clickedOnRect = e.target.className === 'Rect';
-    if (clickedOnRect) {
+    if (!shiftPressed) {
       setDrawing(true);
-      e.evt.stopPropagation(); // Prevent the event from bubbling up
+      e.evt.stopPropagation(); // Prevent the event from bubbling up if needed
       const pos = e.target.getStage().getPointerPosition();
       setLocalLines([...localLines, [pos.x - position.x, pos.y - position.y]]);
     }
   };
 
-  // Add points to the current line on mouse move
   const handleMouseMove = (e) => {
-    if (!drawing) return;
-    const stage = e.target.getStage();
-    const point = stage.getPointerPosition();
-    let lastLine = localLines[localLines.length - 1];
-    lastLine = [...lastLine, point.x - position.x, point.y - position.y];
-    setLocalLines([...localLines.slice(0, -1), lastLine]);
+    if (drawing) {
+      const stage = e.target.getStage();
+      const point = stage.getPointerPosition();
+      let lastLine = localLines[localLines.length - 1];
+      lastLine = [...lastLine, point.x - position.x, point.y - position.y];
+      setLocalLines([...localLines.slice(0, -1), lastLine]);
+    }
   };
+
 
   // Handler for ending the drawing
   const handleMouseUp = () => {
