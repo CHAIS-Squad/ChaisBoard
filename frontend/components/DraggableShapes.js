@@ -7,35 +7,53 @@ export default function DraggableShapes({
   onDragEnd,
   selection,
   setSelection,
+  selectedObjects,
 }) {
  
   const transformerRef = useRef(null);
   const layerRef = useRef(null);
 
+  // useEffect(() => {
+  //   if (transformerRef.current) {
+  //     if (selection.id) {
+  //       // Attempt to find the selected node using the selection.id
+  //       const selectedNode = transformerRef.current.getStage().findOne(`#${selection.id}`);
+  //       // Ensure selectedNode is defined before attempting to use it
+  //       if (selectedNode) {
+  //         transformerRef.current.nodes([selectedNode]);
+  //       } else {
+  //         // If no node was found, clear the transformer's nodes array
+  //         transformerRef.current.nodes([]);
+  //       }
+  //     } else {
+  //       // If there's no selection, also clear the transformer's nodes array
+  //       transformerRef.current.nodes([]);
+  //     }
+  //     transformerRef.current.getLayer().batchDraw();
+  //   }
+  // }, [selection, shapes]);
+  
   useEffect(() => {
-    if (transformerRef.current) {
-      if (selection.id) {
-        // Attempt to find the selected node using the selection.id
-        const selectedNode = transformerRef.current.getStage().findOne(`#${selection.id}`);
-        // Ensure selectedNode is defined before attempting to use it
-        if (selectedNode) {
-          transformerRef.current.nodes([selectedNode]);
-        } else {
-          // If no node was found, clear the transformer's nodes array
-          transformerRef.current.nodes([]);
-        }
-      } else {
-        // If there's no selection, also clear the transformer's nodes array
-        transformerRef.current.nodes([]);
-      }
+    // Ensure selectedObjects is treated as an array even if undefined
+    const safeSelectedObjects = selectedObjects || [];
+    
+    if (transformerRef.current && safeSelectedObjects.length > 0) {
+      const nodes = safeSelectedObjects.map(({ id }) =>
+        layerRef.current.findOne(`#${id}`)
+      ).filter(node => node); // Filter out undefined nodes
+  
+      transformerRef.current.nodes(nodes);
       transformerRef.current.getLayer().batchDraw();
+    } else {
+      transformerRef.current?.nodes([]);
     }
-  }, [selection, shapes]);
+  }, [selectedObjects]); // Still depend on selectedObjects for reactivity
+  
   
 
 
   return (
-    <Layer>
+    <Layer ref={layerRef}>
       {shapes.map((shape) => {
         const commonProps = {
           key: shape.id,

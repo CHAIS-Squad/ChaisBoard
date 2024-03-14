@@ -29,8 +29,12 @@ export default function MultiLayerCanvas() {
   const [currentColor, setCurrentColor] = useState('#000000');
   const [selection, setSelection] = useState({ type: null, id: null });
   const [showCodeEditor, setShowCodeEditor] = useState(false);
+  const [selectionRect, setSelectionRect] = useState(null); // {x, y, width, height}
+  const [selectedObjects, setSelectedObjects] = useState([]); // Array of selected object IDs
+  const [isSelectionMode, setIsSelectionMode] = useState(false);
 
   const toggleCodeEditor = () => setShowCodeEditor(!showCodeEditor);
+  const toggleSelectionMode = () => setIsSelectionMode(!isSelectionMode);
 
   const selectElement = (type, id, isDoubleClick) => {
     setSelection({ type, id });
@@ -57,10 +61,17 @@ export default function MultiLayerCanvas() {
   };
 
   const handleMouseDown = (e) => {
-    // Check if the click target is the stage (background), indicating a click outside any shape
-    if (e.target === e.target.getStage()) {
-      deselectElement(); // This should effectively reset selection state
+    const { x, y } = e.target.getStage().getPointerPosition();
 
+    // Check if in selection mode and the click target is the stage
+    if (isSelectionMode && e.target === e.target.getStage()) {
+      setSelectionRect({ x, y, width: 0, height: 0 }); // Start selection rectangle
+      setSelectedObjects([]); // Clear previous selections
+      isDrawing.current = false; // Ensure we're not in drawing mode
+    } else if (e.target === e.target.getStage()) {
+      deselectElement(); // Deselect elements if not in selection mode and clicking on the stage
+
+      // Continue with your line drawing logic
       isDrawing.current = true;
       const newLine = { points: [], color: currentColor };
       setLines((prevLines) => [...prevLines, newLine]);
@@ -70,21 +81,35 @@ export default function MultiLayerCanvas() {
   };
 
   const handleMouseMove = (e) => {
-    if (!isDrawing.current) return;
-
-    const stage = e.target.getStage();
-    const point = stage.getPointerPosition();
-    setLines((prevLines) => {
-      const lastLine = { ...prevLines[prevLines.length - 1] };
-      lastLine.points = [...lastLine.points, point.x, point.y]; // Add new points to the current line
-
-      return [...prevLines.slice(0, -1), lastLine]; // Update the lines array with the modified last line
-    });
+    if (isDrawing.current) {
+      // Your existing line drawing logic
+      const stage = e.target.getStage();
+      const point = stage.getPointerPosition();
+      setLines((prevLines) => {
+        const lastLine = { ...prevLines[prevLines.length - 1] };
+        lastLine.points = [...lastLine.points, point.x, point.y];
+        return [...prevLines.slice(0, -1), lastLine];
+      });
+    } else if (isSelectionMode && selectionRect) {
+      // Update selection rectangle dimensions
+      const stage = e.target.getStage();
+      const point = stage.getPointerPosition();
+      const width = point.x - selectionRect.x;
+      const height = point.y - selectionRect.y;
+      setSelectionRect({ ...selectionRect, width, height });
+    }
   };
 
   const handleMouseUp = () => {
-    isDrawing.current = false;
-    saveHistory();
+    if (isDrawing.current) {
+      // Finalize line drawing
+      isDrawing.current = false;
+      saveHistory();
+    } else if (isSelectionMode && selectionRect) {
+      // Identify selected objects and clear selection rectangle
+      identifySelectedObjects();
+      setSelectionRect(null); // Optionally keep to show selection
+    }
   };
 
   // Function to add a new shape based on the selected type
@@ -329,6 +354,52 @@ export default function MultiLayerCanvas() {
     shapes,
   ]);
 
+  const identifySelectedObjects = () => {
+    const rect = {
+      x1: selectionRect.x,
+      y1: selectionRect.y,
+      x2:
+        selectionRect.x +
+        (selectionRect.width < 0 ? -selectionRect.width : selectionRect.width),
+      y2:
+        selectionRect.y +
+        (selectionRect.height < 0
+          ? -selectionRect.height
+          : selectionRect.height),
+    };
+    if (selectionRect.width < 0) {
+      rect.x1 = selectionRect.x + selectionRect.width;
+    }
+    if (selectionRect.height < 0) {
+      rect.y1 = selectionRect.y + selectionRect.height;
+    }
+
+    const selected = [];
+
+    // Example for shapes, repeat similarly for texts and lines if applicable
+    shapes.forEach((shape) => {
+      if (isWithinSelectionRect(shape, rect)) {
+        selected.push({ type: 'shape', id: shape.id });
+      }
+    });
+
+    // TODO: Add similar logic for texts and lines
+    setSelectedObjects(selected);
+  };
+
+  const isWithinSelectionRect = (object, rect) => {
+    // Adjust calculation based on object type if necessary
+    const objectRight = object.x + (object.width || 0); // Add object.width if shape, adjust for lines/texts
+    const objectBottom = object.y + (object.height || 0); // Add object.height if shape, adjust for lines/texts
+
+    return (
+      object.x >= rect.x1 &&
+      object.y >= rect.y1 &&
+      objectRight <= rect.x2 &&
+      objectBottom <= rect.y2
+    );
+  };
+
   return (
     <>
       <Sidebar
@@ -345,6 +416,8 @@ export default function MultiLayerCanvas() {
         clearCanvas={clearCanvas}
         onToggleCodeEditor={toggleCodeEditor}
         showCodeEditor={showCodeEditor}
+        isSelectionMode={isSelectionMode}
+        onToggleSelectionMode={toggleSelectionMode}
       />
 
       <Stage
@@ -359,6 +432,19 @@ export default function MultiLayerCanvas() {
         onMouseMove={handleMouseMove}
         onMouseUp={handleMouseUp}
       >
+        <Layer>
+          {selectionRect && (
+            <Rect
+              x={selectionRect.x}
+              y={selectionRect.y}
+              width={selectionRect.width}
+              height={selectionRect.height}
+              stroke='#0A74DA' // Example stroke color
+              strokeWidth={1}
+              dash={[4, 4]} // Optional: dashed line style
+            />
+          )}
+        </Layer>
         <Whiteboard lines={lines} />
         <DraggableShapes
           shapes={shapes}
@@ -366,6 +452,7 @@ export default function MultiLayerCanvas() {
           onDragEnd={handleShapeDragEnd}
           selection={selection}
           setSelection={setSelection}
+          selectedObjects={selectedObjects || []}
         />
         {texts.map((text) => (
           <Layer key={text.id}>
