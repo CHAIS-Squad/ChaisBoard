@@ -231,6 +231,14 @@ export default function MultiLayerCanvas() {
     saveHistory();
   };
 
+
+  const clearCanvas = () => {
+    setLines([]);
+    setShapes([]);
+    setTexts([]);
+    // Reset any other states related to the canvas content
+  };
+  
   // import canvas template
   function importTemplate(templateObjects) {
     let shapeID = shapes.length;
@@ -318,6 +326,7 @@ export default function MultiLayerCanvas() {
         exportTemplate={exportTemplate}
         currentColor={currentColor}
         setCurrentColor={setCurrentColor}
+        clearCanvas={clearCanvas}
       />
 
       <Stage
