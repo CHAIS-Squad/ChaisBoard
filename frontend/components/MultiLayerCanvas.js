@@ -196,55 +196,54 @@ export default function MultiLayerCanvas() {
     const draggedTextId = e.target?.attrs?.id || e.target?.id();
 
     if (!draggedTextId) {
-        console.error("Failed to identify dragged text id");
-        return;
+      console.error('Failed to identify dragged text id');
+      return;
     }
 
     // Record the start position
     const startPos = { x: e.target.x(), y: e.target.y() };
     // Assuming you're setting startPos for later, ensure e.target is a Konva Node
-    if(e.target.nodeType === 'Shape') {
-        e.target.setAttr('startPos', startPos);
+    if (e.target.nodeType === 'Shape') {
+      e.target.setAttr('startPos', startPos);
     }
 
     const updatedTexts = texts.map((text) => {
-        if (selectedObjects.find(obj => obj.id === text.id)) {
-            return { ...text, isDragging: true };
-        }
-        return text;
-    });
-    setTexts(updatedTexts);
-};
-
-  
-
-const handleTextDragEnd = (e) => {
-  // Safely attempt to get 'id' and 'startPos'
-  const draggedTextId = e.target?.attrs?.id || e.target?.id();
-  const startPos = e.target?.getAttr('startPos');
-
-  if (!startPos || !draggedTextId) {
-      console.error("Failed to get drag start position or text id");
-      return;
-  }
-
-  const deltaX = e.target.x() - startPos.x;
-  const deltaY = e.target.y() - startPos.y;
-
-  const updatedTexts = texts.map((text) => {
-      if (selectedObjects.find(obj => obj.id === text.id)) {
-          return {
-              ...text,
-              position: { x: text.position.x + deltaX, y: text.position.y + deltaY },
-              isDragging: false,
-          };
+      if (selectedObjects.find((obj) => obj.id === text.id)) {
+        return { ...text, isDragging: true };
       }
       return text;
-  });
-  setTexts(updatedTexts);
-};
+    });
+    setTexts(updatedTexts);
+  };
 
-  
+  const handleTextDragEnd = (e) => {
+    // Safely attempt to get 'id' and 'startPos'
+    const draggedTextId = e.target?.attrs?.id || e.target?.id();
+    const startPos = e.target?.getAttr('startPos');
+
+    if (!startPos || !draggedTextId) {
+      console.error('Failed to get drag start position or text id');
+      return;
+    }
+
+    const deltaX = e.target.x() - startPos.x;
+    const deltaY = e.target.y() - startPos.y;
+
+    const updatedTexts = texts.map((text) => {
+      if (selectedObjects.find((obj) => obj.id === text.id)) {
+        return {
+          ...text,
+          position: {
+            x: text.position.x + deltaX,
+            y: text.position.y + deltaY,
+          },
+          isDragging: false,
+        };
+      }
+      return text;
+    });
+    setTexts(updatedTexts);
+  };
 
   const handleTextDoubleClick = (textId) => {
     const updatedTexts = texts.map((text) => {
@@ -273,7 +272,6 @@ const handleTextDragEnd = (e) => {
     setTexts(updatedTexts);
     saveHistory();
   };
-  
 
   const addText = () => {
     const newTextId = `text-${texts.length}`;
@@ -531,21 +529,22 @@ const handleTextDragEnd = (e) => {
               onDragEnd={(e) => handleTextDragEnd(text.id, e)}
               // onDoubleClick={() => selectElement('text', text.id)}
               onUpdate={(id, newText) => handleTextUpdate(id, newText)}
-              isSelected={selectedObjects.some(obj => obj.id === text.id && obj.type === 'text')}
+              isSelected={selectedObjects.some(
+                (obj) => obj.id === text.id && obj.type === 'text'
+              )}
               onSelect={selectElement}
               saveHistory={saveHistory}
-              
             />
           </Layer>
         ))}
       </Stage>
-      {showCodeEditor && (
+      <div className={`${showCodeEditor ? 'block' : 'hidden'}`}>
         <Draggable defaultPosition={{ x: 200, y: -300 }}>
           <div style={{ position: 'absolute', zIndex: 1000 }}>
-            <CodeEditor />
+            <CodeEditor toggleCodeEditor={toggleCodeEditor} />
           </div>
         </Draggable>
-      )}
+      </div>
     </>
   );
 }
