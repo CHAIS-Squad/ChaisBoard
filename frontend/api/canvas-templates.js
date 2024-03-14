@@ -13,7 +13,7 @@ function useCanvasTemplates() {
 
   async function getCanvasTemplatesList() {
     try {
-      const response = await fetch(`${apiUrl}/list/`, options);
+      const response = await fetch(`${apiUrl}/list?owner_id=${user.id}`, options);
       const data = await response.json();
       return data;
     } catch (error) {
@@ -68,6 +68,27 @@ function useCanvasTemplates() {
     }
   }
 
+  // public canvas templates
+  async function getCanvasTemplatesListPublic() {
+    try {
+      const response = await fetch(`${apiUrl}/public/list/`, options);
+      const data = await response.json();
+      return data;
+    } catch (error) {
+      handleError(error);
+    }
+  }
+
+  async function getCanvasTemplatePublic(templateId) {
+    try {
+      const response = await fetch(`${apiUrl}/public/${templateId}/`, options);
+      const data = await response.json();
+      return data;
+    } catch (error) {
+      handleError(error);
+    }
+  }
+
   function handleError(error) {
     console.error(error);
   }
@@ -78,6 +99,8 @@ function useCanvasTemplates() {
     createCanvasTemplate,
     deleteCanvasTemplate,
     updateCanvasTemplate,
+    getCanvasTemplatePublic,
+    getCanvasTemplatesListPublic,
   };
 }
 

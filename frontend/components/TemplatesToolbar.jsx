@@ -16,28 +16,37 @@ function TemplatesToolbar({ importTemplate, exportTemplate }) {
     createCanvasTemplate,
     deleteCanvasTemplate,
     updateCanvasTemplate,
+    getCanvasTemplatePublic,
+    getCanvasTemplatesListPublic,
   } = useCanvasTemplates();
   const { user } = useAuth();
 
-  const [templates, setTemplates] = useState([]);
+  const [userTemplates, setUserTemplates] = useState([]);
+  const [publicTemplates, setPublicTemplates] = useState([]);
   const [selectedTemplate, setSelectedTemplate] = useState({});
 
   useEffect(() => {
     updateTemplateSelector();
-  }, [selectedTemplate]);
+  }, [selectedTemplate, user]);
 
   async function updateTemplateSelector() {
-    const response = await getCanvasTemplatesList();
-    setTemplates(response);
+    if (user) {
+      const userTemplates = await getCanvasTemplatesList();
+      setUserTemplates(userTemplates);
+    }
+    const publicTemplates = await getCanvasTemplatesListPublic();
+    setPublicTemplates(publicTemplates);
   }
 
   async function retrieveTemplate(event) {
     const templateId = event.target.value;
-    console.log(templateId);
     if (templateId === "create" || templateId === "select") {
       setSelectedTemplate(templateId);
-    } else {
-      const response = await getCanvasTemplate(templateId);
+    } else if (templateId.startsWith("public")) {
+      const response = await getCanvasTemplatePublic(templateId.split("-")[1]);
+      setSelectedTemplate(response);
+    } else if (templateId.startsWith("user")) {
+      const response = await getCanvasTemplate(templateId.split("-")[1]);
       setSelectedTemplate(response);
     }
   }
@@ -45,7 +54,7 @@ function TemplatesToolbar({ importTemplate, exportTemplate }) {
   async function handleCreateTemplate(event) {
     event.preventDefault();
     const newTemplateName = event.target.newTemplateName.value;
-    const templateNames = templates.map((template) => template.name);
+    const templateNames = userTemplates.map((template) => template.name);
     if (newTemplateName === "" || templateNames.includes(newTemplateName)) {
       alert("Template name not available. Please choose a different name.");
     } else {
@@ -106,10 +115,24 @@ function TemplatesToolbar({ importTemplate, exportTemplate }) {
         >
           <option value="select">Select Template</option>
           <option value="create">Create New</option>
-          {templates &&
-            templates.map((template) => {
+          {publicTemplates.length &&
+            publicTemplates.map((template) => {
               return (
-                <option key={template.id} value={template.id}>
+                <option
+                  key={`public-${template.id}`}
+                  value={`public-${template.id}`}
+                >
+                  ChaisBoard: {template.name}
+                </option>
+              );
+            })}
+          {userTemplates.length &&
+            userTemplates.map((template) => {
+              return (
+                <option
+                  key={`user-${template.id}`}
+                  value={`user-${template.id}`}
+                >
                   {template.name}
                 </option>
               );
@@ -180,9 +203,7 @@ function TemplatesToolbar({ importTemplate, exportTemplate }) {
             onClick={handleUpdateTemplate}
             className="mb-2"
           >
-            <Dropdown.Item onClick={handleDeleteTemplate}>
-              Delete
-            </Dropdown.Item>
+            <Dropdown.Item onClick={handleDeleteTemplate}>Delete</Dropdown.Item>
           </SplitButton>
         </div>
       </div>
