@@ -27,11 +27,11 @@ export default function MultiLayerCanvas() {
   const [currentColor, setCurrentColor] = useState('#000000');
   const [selection, setSelection] = useState({ type: null, id: null });
 
-  const selectElement = (type, id) => {
+  const selectElement = (type, id, isDoubleClick) => {
     setSelection({ type, id });
-
-    // Check if a text element is selected and toggle its editing mode
-    if (type === 'text') {
+  
+    // Check if a text element is selected and toggle its editing mode only on double-click
+    if (type === 'text' && isDoubleClick) {
       const updatedTexts = texts.map((text) => {
         if (text.id === id) {
           return { ...text, isEditing: true }; // Enable editing mode for the selected text
@@ -41,6 +41,8 @@ export default function MultiLayerCanvas() {
       setTexts(updatedTexts);
     }
   };
+  
+  
 
   const deselectElement = () => {
     // Deselect all elements
@@ -218,7 +220,7 @@ export default function MultiLayerCanvas() {
 
   const addText = () => {
     const newText = {
-      id: `text-${texts.length}`, // Ensuring each text has a unique ID
+      id: `text-${texts.length}`,
       position: { x: 200, y: texts.length * 20 + 100 },
       text: 'New Text',
       color: currentColor,
@@ -353,9 +355,10 @@ export default function MultiLayerCanvas() {
               }
               onDragStart={() => handleTextDragStart(text.id)}
               onDragEnd={(e) => handleTextDragEnd(text.id, e)}
-              onDoubleClick={() => selectElement('text', text.id)}
+              // onDoubleClick={() => selectElement('text', text.id)}
               onUpdate={(id, newText) => handleTextUpdate(id, newText)}
               isSelected={selection.type === 'text' && selection.id === text.id}
+              onSelect={selectElement}
               saveHistory={saveHistory}
             />
           </Layer>
