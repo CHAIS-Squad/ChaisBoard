@@ -4,18 +4,20 @@ import dynamic from 'next/dynamic';
 const MultiLayerCanvas = dynamic(() => import('../components/MultiLayerCanvas'), {
   ssr: false,
 });
+import CodeEditor from "@/components/CodeEditor";
 
 export default function Home() {
   return (
     <div>
       <Head>
-        <title>Whiteboard App</title>
+        <title>ChaisBoard Whiteboard App</title>
         <link rel="icon" href="/favicon.ico" />
       </Head>
 
-      <main>
+      <main style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
         <MultiLayerCanvas />
-      </main>
+        <CodeEditor />
+        </main>
     </div>
   );
 }
