@@ -161,7 +161,6 @@ const Sidebar = ({
         variant='outline-danger'
         size='sm'
         className='mb-2'
-        style={{ position: 'fixed', bottom: 0 }}
       >
         Clear CHAIS_Board
       </Button>
