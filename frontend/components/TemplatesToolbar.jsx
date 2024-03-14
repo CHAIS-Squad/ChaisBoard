@@ -94,6 +94,7 @@ function TemplatesToolbar({ importTemplate, exportTemplate }) {
         konva_objects: templateObjects,
       };
       await updateCanvasTemplate(selectedTemplate.id, updatedTemplate);
+      setSelectedTemplate(updatedTemplate);
     } else {
       alert("Template was not updated.");
     }
