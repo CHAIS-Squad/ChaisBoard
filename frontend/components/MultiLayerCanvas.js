@@ -222,7 +222,7 @@ export default function MultiLayerCanvas() {
     const newText = {
       id: `text-${texts.length}`,
       position: { x: 200, y: texts.length * 20 + 100 },
-      text: 'New Text',
+      text: 'Hello World',
       color: currentColor,
       isDragging: false,
       isEditing: false,
