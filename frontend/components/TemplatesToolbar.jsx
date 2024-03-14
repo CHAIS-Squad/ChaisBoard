@@ -24,6 +24,7 @@ function TemplatesToolbar({ importTemplate, exportTemplate }) {
   const [userTemplates, setUserTemplates] = useState([]);
   const [publicTemplates, setPublicTemplates] = useState([]);
   const [selectedTemplate, setSelectedTemplate] = useState({});
+  const [templateSelector, setTemplateSelector] = useState("select");
 
   useEffect(() => {
     updateTemplateSelector();
@@ -40,6 +41,7 @@ function TemplatesToolbar({ importTemplate, exportTemplate }) {
 
   async function retrieveTemplate(event) {
     const templateId = event.target.value;
+    setTemplateSelector(templateId);
     if (templateId === "create" || templateId === "select") {
       setSelectedTemplate(templateId);
     } else if (templateId.startsWith("public")) {
@@ -54,6 +56,7 @@ function TemplatesToolbar({ importTemplate, exportTemplate }) {
   async function handleCreateTemplate(event) {
     event.preventDefault();
     const newTemplateName = event.target.newTemplateName.value;
+    event.target.reset();
     const templateNames = userTemplates.map((template) => template.name);
     if (newTemplateName === "" || templateNames.includes(newTemplateName)) {
       alert("Template name not available. Please choose a different name.");
@@ -67,8 +70,8 @@ function TemplatesToolbar({ importTemplate, exportTemplate }) {
       };
       const response = await createCanvasTemplate(newCanvasTemplate);
       setSelectedTemplate(response);
+      setTemplateSelector(`user-${response.id}`);
     }
-    event.target.reset();
   }
 
   async function handleDeleteTemplate() {
@@ -110,12 +113,12 @@ function TemplatesToolbar({ importTemplate, exportTemplate }) {
           name="templateSelector"
           id="templateSelector"
           onChange={retrieveTemplate}
-          defaultValue={selectedTemplate.id || "select"}
+          value={templateSelector} 
           size="sm"
           className="mb-2"
         >
           <option value="select">Select Template</option>
-          <option value="create">Create New</option>
+          {user ? <option value="create">Create New</option> : null}
           {publicTemplates.length &&
             publicTemplates.map((template) => {
               return (
