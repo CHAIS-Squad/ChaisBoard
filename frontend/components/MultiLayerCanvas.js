@@ -250,7 +250,6 @@ export default function MultiLayerCanvas() {
         id: `${templateShape.shapeType}-${shapeID}`,
       };
       setShapes((prevShapes) => [...prevShapes, newShape]);
-      saveHistory();
       shapeID += 1;
     }
     for (const templateText of templateObjects.texts) {
@@ -259,16 +258,16 @@ export default function MultiLayerCanvas() {
         id: `text-${texts.length}`,
       };
       setTexts((prevTexts) => [...prevTexts, newText]);
-      saveHistory();
     }
-    // for (const templateLine of templateObjects.lines) {
-    //   const newLine = {
-    //     ...templateLine,
-    //     id: `line-${lines.length}`,
-    //   };
-    //   setLines((prevLines) => [...prevLines, newLine]);
-    //   saveHistory();
-    // }
+    for (const templateLine of templateObjects.lines) {
+      const newLine = {
+        ...templateLine,
+        id: `line-${lines.length}`,
+      };
+      setLines((prevLines) => [...prevLines, newLine]);
+      
+    }
+    saveHistory();
   }
 
   // export canvas template
@@ -280,6 +279,7 @@ export default function MultiLayerCanvas() {
     };
     return templateObjects;
   }
+  
   useEffect(() => {
     const handleKeyDown = (e) => {
       // Handle delete functionality
