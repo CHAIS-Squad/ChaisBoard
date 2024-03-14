@@ -1,11 +1,16 @@
 const apiUrl = process.env.NEXT_PUBLIC_RESOURCE_CANVAS_TEMPLATES_URL;
-const options = {
-  headers: {
-    "Content-Type": "application/json",
-  },
-};
+import { useAuth } from "@/contexts/auth";
 
 function useCanvasTemplates() {
+  const { tokens, user } = useAuth();
+
+  const options = {
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: user ? `Bearer ${tokens.access}` : "",
+    },
+  };
+
   async function getCanvasTemplatesList() {
     try {
       const response = await fetch(`${apiUrl}/list/`, options);
@@ -33,6 +38,7 @@ function useCanvasTemplates() {
         body: JSON.stringify(newTemplate),
         ...options,
       });
+      console.log(options.headers);
       const data = await response.json();
       return data;
     } catch (error) {
@@ -63,6 +69,10 @@ function useCanvasTemplates() {
     }
   }
 
+  function handleError(error) {
+    console.error(error);
+  }
+
   return {
     getCanvasTemplate,
     getCanvasTemplatesList,
@@ -70,10 +80,6 @@ function useCanvasTemplates() {
     deleteCanvasTemplate,
     updateCanvasTemplate,
   };
-}
-
-function handleError(error) {
-  console.error(error);
 }
 
 export default useCanvasTemplates;

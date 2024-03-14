@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import useCanvasTemplates from '@/api/canvas-templates';
 import ColorPickerModal from './ColorPickerModal';
+import UserManager from './UserManager';
 import { Button, Dropdown, DropdownButton } from 'react-bootstrap';
 
 const Sidebar = ({ selectedShape, setSelectedShape, addShape, handleUndo, handleRedo, addText, importTemplate, exportTemplate, currentColor, setCurrentColor }) => {
@@ -18,6 +19,7 @@ const Sidebar = ({ selectedShape, setSelectedShape, addShape, handleUndo, handle
       <ColorPickerModal currentColor={currentColor} setCurrentColor={setCurrentColor} />
       <Button onClick={addText} variant="outline-secondary" size="sm" className="mb-2">Add Text</Button>
       <TemplatesToolbar importTemplate={importTemplate} exportTemplate={exportTemplate} />
+      <UserManager />
     </div>
   );
 };
