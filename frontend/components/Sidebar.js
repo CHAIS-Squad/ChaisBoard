@@ -27,7 +27,7 @@ const IconRightArrow = () => (
   </svg>
 );
 
-const Sidebar = ({ selectedShape, setSelectedShape, addShape, handleUndo, handleRedo, addText, importTemplate, exportTemplate, currentColor, setCurrentColor, clearCanvas }) => {
+const Sidebar = ({ selectedShape, setSelectedShape, addShape, handleUndo, handleRedo, addText, importTemplate, exportTemplate, currentColor, setCurrentColor, clearCanvas, onToggleCodeEditor }) => {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', position: 'fixed', top: 0, left: 0, height: '100%', padding: '20px', background: '#fff', boxShadow: '0 0 10px rgba(0,0,0,0.1)', zIndex: 1000 }}>
@@ -44,6 +44,7 @@ const Sidebar = ({ selectedShape, setSelectedShape, addShape, handleUndo, handle
       <ColorPickerModal currentColor={currentColor} setCurrentColor={setCurrentColor} />
       <Button onClick={addText} variant="outline-secondary" size="sm" className="mb-2">Add Text</Button>
       <TemplatesToolbar importTemplate={importTemplate} exportTemplate={exportTemplate} />
+      <Button onClick={onToggleCodeEditor} variant="outline-secondary" size="sm" className="mb-2">Add Code Editor</Button>
       <Button onClick={clearCanvas} variant="outline-danger" size="sm" className="mb-2" style={{ position: 'fixed', bottom: 0 }}>Clear CHAIS_Board</Button>
     </div>
   );

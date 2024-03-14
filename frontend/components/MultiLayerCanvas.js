@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { Stage, Layer, Text, Rect, Circle, Star, Arrow } from 'react-konva';
 import dynamic from 'next/dynamic';
 import Sidebar from './Sidebar';
+import CodeEditor from './CodeEditor';
 
 const Whiteboard = dynamic(() => import('../components/Whiteboard'), {
   ssr: false,
@@ -26,10 +27,13 @@ export default function MultiLayerCanvas() {
   const [texts, setTexts] = useState([]);
   const [currentColor, setCurrentColor] = useState('#000000');
   const [selection, setSelection] = useState({ type: null, id: null });
+  const [showCodeEditor, setShowCodeEditor] = useState(false);
+
+  const toggleCodeEditor = () => setShowCodeEditor(!showCodeEditor);
 
   const selectElement = (type, id, isDoubleClick) => {
     setSelection({ type, id });
-  
+
     // Check if a text element is selected and toggle its editing mode only on double-click
     if (type === 'text' && isDoubleClick) {
       const updatedTexts = texts.map((text) => {
@@ -41,8 +45,6 @@ export default function MultiLayerCanvas() {
       setTexts(updatedTexts);
     }
   };
-  
-  
 
   const deselectElement = () => {
     // Deselect all elements
@@ -231,14 +233,13 @@ export default function MultiLayerCanvas() {
     saveHistory();
   };
 
-
   const clearCanvas = () => {
     setLines([]);
     setShapes([]);
     setTexts([]);
     // Reset any other states related to the canvas content
   };
-  
+
   // import canvas template
   function importTemplate(templateObjects) {
     let shapeID = shapes.length;
@@ -327,6 +328,7 @@ export default function MultiLayerCanvas() {
         currentColor={currentColor}
         setCurrentColor={setCurrentColor}
         clearCanvas={clearCanvas}
+        onToggleCodeEditor={toggleCodeEditor}
       />
 
       <Stage
@@ -373,6 +375,19 @@ export default function MultiLayerCanvas() {
           </Layer>
         ))}
       </Stage>
+      {showCodeEditor && (
+        <div
+          style={{
+            position: 'absolute',
+            top: '10%',
+            right: '10%',
+            width: '400px',
+            zIndex: 100,
+          }}
+        >
+          <CodeEditor />
+        </div>
+      )}
     </>
   );
 }
