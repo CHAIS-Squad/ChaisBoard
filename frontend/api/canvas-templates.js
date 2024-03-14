@@ -1,14 +1,19 @@
 const apiUrl = process.env.NEXT_PUBLIC_RESOURCE_CANVAS_TEMPLATES_URL;
-const options = {
-  headers: {
-    "Content-Type": "application/json",
-  },
-};
+import { useAuth } from "@/contexts/auth";
 
 function useCanvasTemplates() {
+  const { tokens, user } = useAuth();
+
+  const options = {
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: user ? `Bearer ${tokens.access}` : "",
+    },
+  };
+
   async function getCanvasTemplatesList() {
     try {
-      const response = await fetch(`${apiUrl}/list/`, options);
+      const response = await fetch(`${apiUrl}/list?owner_id=${user.id}`, options);
       const data = await response.json();
       return data;
     } catch (error) {
@@ -63,17 +68,40 @@ function useCanvasTemplates() {
     }
   }
 
+  // public canvas templates
+  async function getCanvasTemplatesListPublic() {
+    try {
+      const response = await fetch(`${apiUrl}/public/list/`, options);
+      const data = await response.json();
+      return data;
+    } catch (error) {
+      handleError(error);
+    }
+  }
+
+  async function getCanvasTemplatePublic(templateId) {
+    try {
+      const response = await fetch(`${apiUrl}/public/${templateId}/`, options);
+      const data = await response.json();
+      return data;
+    } catch (error) {
+      handleError(error);
+    }
+  }
+
+  function handleError(error) {
+    console.error(error);
+  }
+
   return {
     getCanvasTemplate,
     getCanvasTemplatesList,
     createCanvasTemplate,
     deleteCanvasTemplate,
     updateCanvasTemplate,
+    getCanvasTemplatePublic,
+    getCanvasTemplatesListPublic,
   };
-}
-
-function handleError(error) {
-  console.error(error);
 }
 
 export default useCanvasTemplates;
