@@ -10,25 +10,13 @@ const MultiLayerCanvas = dynamic(() => import('../components/MultiLayerCanvas'),
   });
 
 export default function App() {
-  const [showCodeEditor, setShowCodeEditor] = useState(false);
-
-  const toggleCodeEditor = () => setShowCodeEditor(!showCodeEditor);
 
   return (
     <div style={{ display: 'flex' }}>
-      <div className="sidebar">
-        <Button onClick={toggleCodeEditor}>Add Code Editor</Button>
-      </div>
       <main style={{ flex: 1 }}>
         <MultiLayerCanvas />
+        <CodeEditor />
       </main>
-      <div style={{ maxWidth: '300px', width: '100%' }}>
-        <Collapse in={showCodeEditor}>
-          <div>
-            <CodeEditor />
-          </div>
-        </Collapse>
-      </div>
     </div>
   );
 }

@@ -330,6 +330,7 @@ export default function MultiLayerCanvas() {
         setCurrentColor={setCurrentColor}
         clearCanvas={clearCanvas}
         onToggleCodeEditor={toggleCodeEditor}
+        showCodeEditor={showCodeEditor}
       />
 
       <Stage
