@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { Stage, Layer, Text, Rect, Circle, Star, Arrow } from 'react-konva';
+import Draggable from 'react-draggable';
 import dynamic from 'next/dynamic';
 import Sidebar from './Sidebar';
 import CodeEditor from './CodeEditor';
@@ -376,17 +377,11 @@ export default function MultiLayerCanvas() {
         ))}
       </Stage>
       {showCodeEditor && (
-        <div
-          style={{
-            position: 'absolute',
-            top: '10%',
-            right: '10%',
-            width: '400px',
-            zIndex: 100,
-          }}
-        >
-          <CodeEditor />
-        </div>
+        <Draggable defaultPosition={{ x: 200, y: -300 }}>
+          <div style={{ position: 'absolute', zIndex: 1000 }}>
+            <CodeEditor />
+          </div>
+        </Draggable>
       )}
     </>
   );
