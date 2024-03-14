@@ -265,7 +265,6 @@ export default function MultiLayerCanvas() {
         id: `line-${lines.length}`,
       };
       setLines((prevLines) => [...prevLines, newLine]);
-      
     }
     saveHistory();
   }
@@ -279,16 +278,31 @@ export default function MultiLayerCanvas() {
     };
     return templateObjects;
   }
-  
+
   useEffect(() => {
     const handleKeyDown = (e) => {
       // Handle delete functionality
       if ((e.key === 'Delete' || e.key === 'Backspace') && selection.id) {
+        const selectedText = texts.find((text) => text.id === selection.id);
+        if (selectedText && selectedText.isEditing) {
+          // If in editing mode, don't proceed with deletion
+          return;
+        }
+
         e.preventDefault();
-        setShapes((shapes) =>
-          shapes.filter((shape) => shape.id !== selection.id)
-        );
-        setSelection({ type: null, id: null }); // Clear selection
+        // Check if the selection is a text and remove it accordingly
+        if (selection.type === 'text') {
+          setTexts((currentTexts) =>
+            currentTexts.filter((text) => text.id !== selection.id)
+          );
+        } else {
+          // Assuming other shapes are handled similarly
+          setShapes((currentShapes) =>
+            currentShapes.filter((shape) => shape.id !== selection.id)
+          );
+        }
+        // Clear selection after deletion
+        setSelection({ type: null, id: null });
       }
       // Handle undo functionality
       else if ((e.ctrlKey || e.metaKey) && e.key === 'z') {

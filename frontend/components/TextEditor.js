@@ -41,16 +41,15 @@ export default function TextEditor({
       textareaElement.focus();
 
       const handleTextareaKeyDown = (e) => {
-        // Prevent global shortcuts when typing in the textarea
-        e.stopPropagation();
-
-        // Special handling for the Enter key without Shift
+        // Only stop propagation for Enter key without Shift
         if (e.key === 'Enter' && !e.shiftKey) {
+          e.stopPropagation();
           setEditingText(textareaElement.value);
           onUpdate(id, { text: textareaElement.value, fontSize: fontSize });
           document.body.removeChild(textareaElement);
         }
       };
+      
 
       const handleOutsideClick = (e) => {
         if (e.type === 'click' && e.target !== textareaElement) {
