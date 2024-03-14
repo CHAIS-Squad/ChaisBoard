@@ -29,8 +29,12 @@ export default function MultiLayerCanvas() {
   const [currentColor, setCurrentColor] = useState('#000000');
   const [selection, setSelection] = useState({ type: null, id: null });
   const [showCodeEditor, setShowCodeEditor] = useState(false);
+  const [selectionRect, setSelectionRect] = useState(null); // {x, y, width, height}
+  const [selectedObjects, setSelectedObjects] = useState([]); // Array of selected object IDs
+  const [isSelectionMode, setIsSelectionMode] = useState(false);
 
   const toggleCodeEditor = () => setShowCodeEditor(!showCodeEditor);
+  const toggleSelectionMode = () => setIsSelectionMode(!isSelectionMode);
 
   const selectElement = (type, id, isDoubleClick) => {
     setSelection({ type, id });
@@ -57,10 +61,17 @@ export default function MultiLayerCanvas() {
   };
 
   const handleMouseDown = (e) => {
-    // Check if the click target is the stage (background), indicating a click outside any shape
-    if (e.target === e.target.getStage()) {
-      deselectElement(); // This should effectively reset selection state
+    const { x, y } = e.target.getStage().getPointerPosition();
 
+    // Check if in selection mode and the click target is the stage
+    if (isSelectionMode && e.target === e.target.getStage()) {
+      setSelectionRect({ x, y, width: 0, height: 0 }); // Start selection rectangle
+      setSelectedObjects([]); // Clear previous selections
+      isDrawing.current = false; // Ensure we're not in drawing mode
+    } else if (e.target === e.target.getStage()) {
+      deselectElement(); // Deselect elements if not in selection mode and clicking on the stage
+
+      // Continue with your line drawing logic
       isDrawing.current = true;
       const newLine = { points: [], color: currentColor };
       setLines((prevLines) => [...prevLines, newLine]);
@@ -70,21 +81,35 @@ export default function MultiLayerCanvas() {
   };
 
   const handleMouseMove = (e) => {
-    if (!isDrawing.current) return;
-
-    const stage = e.target.getStage();
-    const point = stage.getPointerPosition();
-    setLines((prevLines) => {
-      const lastLine = { ...prevLines[prevLines.length - 1] };
-      lastLine.points = [...lastLine.points, point.x, point.y]; // Add new points to the current line
-
-      return [...prevLines.slice(0, -1), lastLine]; // Update the lines array with the modified last line
-    });
+    if (isDrawing.current) {
+      // Your existing line drawing logic
+      const stage = e.target.getStage();
+      const point = stage.getPointerPosition();
+      setLines((prevLines) => {
+        const lastLine = { ...prevLines[prevLines.length - 1] };
+        lastLine.points = [...lastLine.points, point.x, point.y];
+        return [...prevLines.slice(0, -1), lastLine];
+      });
+    } else if (isSelectionMode && selectionRect) {
+      // Update selection rectangle dimensions
+      const stage = e.target.getStage();
+      const point = stage.getPointerPosition();
+      const width = point.x - selectionRect.x;
+      const height = point.y - selectionRect.y;
+      setSelectionRect({ ...selectionRect, width, height });
+    }
   };
 
   const handleMouseUp = () => {
-    isDrawing.current = false;
-    saveHistory();
+    if (isDrawing.current) {
+      // Finalize line drawing
+      isDrawing.current = false;
+      saveHistory();
+    } else if (isSelectionMode && selectionRect) {
+      // Identify selected objects and clear selection rectangle
+      identifySelectedObjects();
+      setSelectionRect(null); // Optionally keep to show selection
+    }
   };
 
   // Function to add a new shape based on the selected type
@@ -148,10 +173,17 @@ export default function MultiLayerCanvas() {
     saveHistory();
   };
 
-  const handleShapeDragEnd = (shapeId, newPos) => {
+  const handleShapeDragEnd = (shapeId, { x, y, scaleX, scaleY }) => {
     const updatedShapes = shapes.map((shape) => {
       if (shape.id === shapeId) {
-        return { ...shape, ...newPos, isDragging: false };
+        return {
+          ...shape,
+          x,
+          y,
+          scaleX: scaleX || 1, // Safely default to 1 if undefined
+          scaleY: scaleY || 1, // Safely default to 1 if undefined
+          isDragging: false,
+        };
       }
       return shape;
     });
@@ -159,39 +191,60 @@ export default function MultiLayerCanvas() {
     saveHistory();
   };
 
-  const handleTextDragStart = (textId) => {
-    const updatedTexts = texts.map((text) => {
-      if (text.id === textId) {
-        return { ...text, isDragging: true };
-      }
-      return text;
-    });
-    setTexts(updatedTexts);
-  };
+  const handleTextDragStart = (e) => {
+    // Safely attempt to get 'id' from the Konva node
+    const draggedTextId = e.target?.attrs?.id || e.target?.id();
 
-  const handleTextDragEnd = (textId, e) => {
-    // Ensure e.target is defined and has .x() and .y() methods
-    if (
-      e.target &&
-      typeof e.target.x === 'function' &&
-      typeof e.target.y === 'function'
-    ) {
-      const updatedTexts = texts.map((text) => {
-        if (text.id === textId) {
-          // Use e.target.x() and e.target.y() to get the new position
-          return {
-            ...text,
-            position: { x: e.target.x(), y: e.target.y() },
-            isDragging: false,
-          };
+    if (!draggedTextId) {
+        console.error("Failed to identify dragged text id");
+        return;
+    }
+
+    // Record the start position
+    const startPos = { x: e.target.x(), y: e.target.y() };
+    // Assuming you're setting startPos for later, ensure e.target is a Konva Node
+    if(e.target.nodeType === 'Shape') {
+        e.target.setAttr('startPos', startPos);
+    }
+
+    const updatedTexts = texts.map((text) => {
+        if (selectedObjects.find(obj => obj.id === text.id)) {
+            return { ...text, isDragging: true };
         }
         return text;
-      });
-      setTexts(updatedTexts);
-    } else {
-      console.error('Unexpected event target:', e.target);
-    }
-  };
+    });
+    setTexts(updatedTexts);
+};
+
+  
+
+const handleTextDragEnd = (e) => {
+  // Safely attempt to get 'id' and 'startPos'
+  const draggedTextId = e.target?.attrs?.id || e.target?.id();
+  const startPos = e.target?.getAttr('startPos');
+
+  if (!startPos || !draggedTextId) {
+      console.error("Failed to get drag start position or text id");
+      return;
+  }
+
+  const deltaX = e.target.x() - startPos.x;
+  const deltaY = e.target.y() - startPos.y;
+
+  const updatedTexts = texts.map((text) => {
+      if (selectedObjects.find(obj => obj.id === text.id)) {
+          return {
+              ...text,
+              position: { x: text.position.x + deltaX, y: text.position.y + deltaY },
+              isDragging: false,
+          };
+      }
+      return text;
+  });
+  setTexts(updatedTexts);
+};
+
+  
 
   const handleTextDoubleClick = (textId) => {
     const updatedTexts = texts.map((text) => {
@@ -220,11 +273,13 @@ export default function MultiLayerCanvas() {
     setTexts(updatedTexts);
     saveHistory();
   };
+  
 
   const addText = () => {
+    const newTextId = `text-${texts.length}`;
     const newText = {
       id: `text-${texts.length}`,
-      position: { x: 200, y: texts.length * 20 + 100 },
+      position: { x: 300, y: texts.length * 20 + 100 },
       text: 'Hello World',
       color: currentColor,
       isDragging: false,
@@ -265,7 +320,6 @@ export default function MultiLayerCanvas() {
         id: `line-${lines.length}`,
       };
       setLines((prevLines) => [...prevLines, newLine]);
-      
     }
     saveHistory();
   }
@@ -279,16 +333,31 @@ export default function MultiLayerCanvas() {
     };
     return templateObjects;
   }
-  
+
   useEffect(() => {
     const handleKeyDown = (e) => {
       // Handle delete functionality
       if ((e.key === 'Delete' || e.key === 'Backspace') && selection.id) {
+        const selectedText = texts.find((text) => text.id === selection.id);
+        if (selectedText && selectedText.isEditing) {
+          // If in editing mode, don't proceed with deletion
+          return;
+        }
+
         e.preventDefault();
-        setShapes((shapes) =>
-          shapes.filter((shape) => shape.id !== selection.id)
-        );
-        setSelection({ type: null, id: null }); // Clear selection
+        // Check if the selection is a text and remove it accordingly
+        if (selection.type === 'text') {
+          setTexts((currentTexts) =>
+            currentTexts.filter((text) => text.id !== selection.id)
+          );
+        } else {
+          // Assuming other shapes are handled similarly
+          setShapes((currentShapes) =>
+            currentShapes.filter((shape) => shape.id !== selection.id)
+          );
+        }
+        // Clear selection after deletion
+        setSelection({ type: null, id: null });
       }
       // Handle undo functionality
       else if ((e.ctrlKey || e.metaKey) && e.key === 'z') {
@@ -315,6 +384,82 @@ export default function MultiLayerCanvas() {
     shapes,
   ]);
 
+  const identifySelectedObjects = () => {
+    const rect = {
+      x1: Math.min(selectionRect.x, selectionRect.x + selectionRect.width),
+      y1: Math.min(selectionRect.y, selectionRect.y + selectionRect.height),
+      x2: Math.max(selectionRect.x, selectionRect.x + selectionRect.width),
+      y2: Math.max(selectionRect.y, selectionRect.y + selectionRect.height),
+    };
+
+    if (selectionRect.width < 0) {
+      rect.x1 = selectionRect.x + selectionRect.width;
+    }
+    if (selectionRect.height < 0) {
+      rect.y1 = selectionRect.y + selectionRect.height;
+    }
+
+    const selected = [];
+
+    // Handle shapes selection
+    shapes.forEach((shape) => {
+      if (isWithinSelectionRect(shape, rect)) {
+        selected.push({ type: 'shape', id: shape.id });
+      }
+    });
+
+    // Handle texts
+    texts.forEach((text) => {
+      // If text.width and text.height are not directly available, estimate or calculate these values.
+      // Example: Use a default width and height if not set
+      const textWidth = text.width || 100; // Default width if not set
+      const textHeight = text.height || 20; // Default height if not set
+
+      const textRect = {
+        x1: text.position.x,
+        y1: text.position.y,
+        x2: text.position.x + textWidth,
+        y2: text.position.y + textHeight,
+      };
+
+      // Debugging output to help troubleshoot selection issues
+      console.log(`Evaluating text: ${text.id}`);
+      console.log(
+        `Text position and size: x=${text.position.x}, y=${text.position.y}, width=${textWidth}, height=${textHeight}`
+      );
+      console.log(
+        `Selection rect: x1=${rect.x1}, y1=${rect.y1}, x2=${rect.x2}, y2=${rect.y2}`
+      );
+
+      // Determine if the text object is within the selection rectangle
+      const isWithinSelection =
+        rect.x1 < textRect.x2 &&
+        rect.x2 > textRect.x1 &&
+        rect.y1 < textRect.y2 &&
+        rect.y2 > textRect.y1;
+      console.log(`Is within rect: ${isWithinSelection}`);
+
+      if (isWithinSelection) {
+        selected.push({ type: 'text', id: text.id });
+      }
+    });
+
+    setSelectedObjects(selected);
+  };
+
+  const isWithinSelectionRect = (object, rect) => {
+    // Adjust calculation based on object type if necessary
+    const objRight = object.x + (object.width || 100);
+    const objBottom = object.y + (object.height || 20);
+
+    return (
+      object.x >= rect.x1 &&
+      object.y >= rect.y1 &&
+      objRight <= rect.x2 &&
+      objBottom <= rect.y2
+    );
+  };
+
   return (
     <>
       <Sidebar
@@ -331,6 +476,8 @@ export default function MultiLayerCanvas() {
         clearCanvas={clearCanvas}
         onToggleCodeEditor={toggleCodeEditor}
         showCodeEditor={showCodeEditor}
+        isSelectionMode={isSelectionMode}
+        onToggleSelectionMode={toggleSelectionMode}
       />
 
       <Stage
@@ -345,6 +492,19 @@ export default function MultiLayerCanvas() {
         onMouseMove={handleMouseMove}
         onMouseUp={handleMouseUp}
       >
+        <Layer>
+          {selectionRect && (
+            <Rect
+              x={selectionRect.x}
+              y={selectionRect.y}
+              width={selectionRect.width}
+              height={selectionRect.height}
+              stroke='#0A74DA' // Example stroke color
+              strokeWidth={1}
+              dash={[4, 4]} // Optional: dashed line style
+            />
+          )}
+        </Layer>
         <Whiteboard lines={lines} />
         <DraggableShapes
           shapes={shapes}
@@ -352,6 +512,7 @@ export default function MultiLayerCanvas() {
           onDragEnd={handleShapeDragEnd}
           selection={selection}
           setSelection={setSelection}
+          selectedObjects={selectedObjects || []}
         />
         {texts.map((text) => (
           <Layer key={text.id}>
@@ -370,9 +531,10 @@ export default function MultiLayerCanvas() {
               onDragEnd={(e) => handleTextDragEnd(text.id, e)}
               // onDoubleClick={() => selectElement('text', text.id)}
               onUpdate={(id, newText) => handleTextUpdate(id, newText)}
-              isSelected={selection.type === 'text' && selection.id === text.id}
+              isSelected={selectedObjects.some(obj => obj.id === text.id && obj.type === 'text')}
               onSelect={selectElement}
               saveHistory={saveHistory}
+              
             />
           </Layer>
         ))}
