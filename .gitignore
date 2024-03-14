@@ -122,3 +122,5 @@ static/CACHE/
 
 # poetry
 poetry.lock
+
+db.sqlite3

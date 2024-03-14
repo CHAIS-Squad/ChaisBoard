@@ -1,7 +1,9 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { Stage, Layer, Text, Rect, Circle, Star } from 'react-konva';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
+import { Stage, Layer, Text, Rect, Circle, Star, Arrow } from 'react-konva';
+import Draggable from 'react-draggable';
 import dynamic from 'next/dynamic';
 import Sidebar from './Sidebar';
+import CodeEditor from './CodeEditor';
 
 const Whiteboard = dynamic(() => import('../components/Whiteboard'), {
   ssr: false,
@@ -25,63 +27,75 @@ export default function MultiLayerCanvas() {
   const [historyStep, setHistoryStep] = useState(0);
   const [texts, setTexts] = useState([]);
   const [currentColor, setCurrentColor] = useState('#000000');
+  const [selection, setSelection] = useState({ type: null, id: null });
+  const [showCodeEditor, setShowCodeEditor] = useState(false);
 
-  // console.log('Current texts state:', texts);
-  // console.log('Current selectedShape state:', selectedShape);
+  const toggleCodeEditor = () => setShowCodeEditor(!showCodeEditor);
 
-  useEffect(() => {
-    const handleKeyDown = (e) => {
-      if ((e.ctrlKey || e.metaKey) && e.key === 'z') {
-        e.preventDefault();
-        handleUndo();
-      } else if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === 'z') {
-        e.preventDefault();
-        handleRedo();
-      }
-    };
+  const selectElement = (type, id, isDoubleClick) => {
+    setSelection({ type, id });
 
-    window.addEventListener('keydown', handleKeyDown);
+    // Check if a text element is selected and toggle its editing mode only on double-click
+    if (type === 'text' && isDoubleClick) {
+      const updatedTexts = texts.map((text) => {
+        if (text.id === id) {
+          return { ...text, isEditing: true }; // Enable editing mode for the selected text
+        }
+        return { ...text, isEditing: false }; // Ensure other texts are not in editing mode
+      });
+      setTexts(updatedTexts);
+    }
+  };
 
-    return () => {
-      window.removeEventListener('keydown', handleKeyDown);
-    };
-  }, [lines, shapes]);
+  const deselectElement = () => {
+    // Deselect all elements
+    setSelection({ type: null, id: null });
+
+    // Exit editing mode for all texts
+    const updatedTexts = texts.map((text) => ({ ...text, isEditing: false }));
+    setTexts(updatedTexts);
+  };
 
   const handleMouseDown = (e) => {
+    // Check if the click target is the stage (background), indicating a click outside any shape
     if (e.target === e.target.getStage()) {
+      deselectElement(); // This should effectively reset selection state
+
       isDrawing.current = true;
-      // Start a new line with the current color
       const newLine = { points: [], color: currentColor };
       setLines((prevLines) => [...prevLines, newLine]);
-      saveHistory();
+    } else {
+      isDrawing.current = false;
     }
   };
 
   const handleMouseMove = (e) => {
     if (!isDrawing.current) return;
-  
+
     const stage = e.target.getStage();
     const point = stage.getPointerPosition();
     setLines((prevLines) => {
       const lastLine = { ...prevLines[prevLines.length - 1] };
       lastLine.points = [...lastLine.points, point.x, point.y]; // Add new points to the current line
-  
+
       return [...prevLines.slice(0, -1), lastLine]; // Update the lines array with the modified last line
     });
   };
 
   const handleMouseUp = () => {
     isDrawing.current = false;
+    saveHistory();
   };
 
   // Function to add a new shape based on the selected type
   const addShape = () => {
     const newShape = {
       id: `${selectedShape}-${shapes.length}`, // Use selectedShape instead of selectedShapeType
-      shapeType: selectedShape, // This correctly refers to the state variable holding the selected shape type
-      x: Math.max(210, Math.random() * window.innerWidth * 0.8),
-      y: Math.random() * window.innerHeight * 0.8,
-      rotation: Math.random() * 180,
+      shapeType: selectedShape,
+      color: currentColor,
+      x: 300,
+      y: 100,
+      rotation: 0,
       isDragging: false, // Initial dragging state is false
     };
     setShapes((prevShapes) => [...prevShapes, newShape]);
@@ -89,31 +103,41 @@ export default function MultiLayerCanvas() {
   };
 
   const saveHistory = () => {
-    const newHistory = history.slice(0, historyStep + 1);
-    setHistory([...newHistory, { lines, shapes }]);
-    setHistoryStep(historyStep + 1);
+    const currentStepHistory = {
+      lines: [...lines],
+      shapes: [...shapes],
+      texts: [...texts],
+    };
+    const newHistory = history.slice(0, historyStep + 1); // Remove "future" states if any
+    newHistory.push(currentStepHistory);
+    setHistory(newHistory);
+    setHistoryStep(newHistory.length - 1); // Update the current step
   };
 
-  const handleUndo = () => {
+  const handleUndo = useCallback(() => {
     if (historyStep > 0) {
+      const previousStep = history[historyStep - 1];
+      setLines(previousStep.lines);
+      setShapes(previousStep.shapes);
+      setTexts(previousStep.texts);
       setHistoryStep(historyStep - 1);
-      setShapes(history[historyStep - 1].shapes);
-      setLines(history[historyStep - 1].lines);
     }
-  };
+  }, [history, historyStep]); // Dependencies
 
-  const handleRedo = () => {
+  const handleRedo = useCallback(() => {
     if (historyStep < history.length - 1) {
+      const nextStep = history[historyStep + 1];
+      setLines(nextStep.lines);
+      setShapes(nextStep.shapes);
+      setTexts(nextStep.texts);
       setHistoryStep(historyStep + 1);
-      setShapes(history[historyStep + 1].shapes);
-      setLines(history[historyStep + 1].lines);
     }
-  };
+  }, [history, historyStep]); // Dependencies
 
   const width = window.innerWidth;
   const height = window.innerHeight;
 
-  const handleDragStart = (shapeId) => {
+  const handleShapeDragStart = (shapeId) => {
     const updatedShapes = shapes.map((shape) => {
       if (shape.id === shapeId) {
         return { ...shape, isDragging: true };
@@ -124,7 +148,7 @@ export default function MultiLayerCanvas() {
     saveHistory();
   };
 
-  const handleDragEnd = (shapeId, newPos) => {
+  const handleShapeDragEnd = (shapeId, newPos) => {
     const updatedShapes = shapes.map((shape) => {
       if (shape.id === shapeId) {
         return { ...shape, ...newPos, isDragging: false };
@@ -179,22 +203,29 @@ export default function MultiLayerCanvas() {
     setTexts(updatedTexts);
   };
 
-  const handleTextUpdate = (textId, newText) => {
+  const handleTextUpdate = (textId, updateProps) => {
     const updatedTexts = texts.map((text) => {
       if (text.id === textId) {
-        return { ...text, text: newText, isEditing: false };
+        // Spread existing text properties, then override with any updates
+        return {
+          ...text,
+          ...updateProps, // Apply updates, which may include text, fontSize, and/or position
+          position: { ...text.position, ...updateProps.position }, // Ensure position updates are merged
+          isEditing: false, // Ensure we exit editing mode
+        };
       }
       return text;
     });
+
     setTexts(updatedTexts);
     saveHistory();
   };
 
   const addText = () => {
     const newText = {
-      id: `text-${texts.length}`, // Ensuring each text has a unique ID
+      id: `text-${texts.length}`,
       position: { x: 200, y: texts.length * 20 + 100 },
-      text: 'New Text',
+      text: 'Hello World',
       color: currentColor,
       isDragging: false,
       isEditing: false,
@@ -203,14 +234,86 @@ export default function MultiLayerCanvas() {
     saveHistory();
   };
 
+  const clearCanvas = () => {
+    setLines([]);
+    setShapes([]);
+    setTexts([]);
+    // Reset any other states related to the canvas content
+  };
+
   // import canvas template
   function importTemplate(templateObjects) {
-    for (const templateObject of templateObjects.shapes) {
-      templateObject.id += `-${shapes.length}`;
-      setShapes((prevShapes) => [...prevShapes, templateObject]);
-      saveHistory();
+    let shapeID = shapes.length;
+    for (const templateShape of templateObjects.shapes) {
+      const newShape = {
+        ...templateShape,
+        id: `${templateShape.shapeType}-${shapeID}`,
+      };
+      setShapes((prevShapes) => [...prevShapes, newShape]);
+      shapeID += 1;
     }
+    for (const templateText of templateObjects.texts) {
+      const newText = {
+        ...templateText,
+        id: `text-${texts.length}`,
+      };
+      setTexts((prevTexts) => [...prevTexts, newText]);
+    }
+    for (const templateLine of templateObjects.lines) {
+      const newLine = {
+        ...templateLine,
+        id: `line-${lines.length}`,
+      };
+      setLines((prevLines) => [...prevLines, newLine]);
+      
+    }
+    saveHistory();
   }
+
+  // export canvas template
+  function exportTemplate() {
+    const templateObjects = {
+      shapes: shapes,
+      texts: texts,
+      lines: lines,
+    };
+    return templateObjects;
+  }
+  
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      // Handle delete functionality
+      if ((e.key === 'Delete' || e.key === 'Backspace') && selection.id) {
+        e.preventDefault();
+        setShapes((shapes) =>
+          shapes.filter((shape) => shape.id !== selection.id)
+        );
+        setSelection({ type: null, id: null }); // Clear selection
+      }
+      // Handle undo functionality
+      else if ((e.ctrlKey || e.metaKey) && e.key === 'z') {
+        e.preventDefault();
+        handleUndo();
+      }
+      // Handle redo functionality
+      else if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === 'Z') {
+        // Capital 'Z' for shift combination
+        e.preventDefault();
+        handleRedo();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [
+    selection,
+    setShapes,
+    setSelection,
+    handleUndo,
+    handleRedo,
+    lines,
+    shapes,
+  ]);
 
   return (
     <>
@@ -222,22 +325,33 @@ export default function MultiLayerCanvas() {
         handleRedo={handleRedo}
         addText={addText}
         importTemplate={importTemplate}
+        exportTemplate={exportTemplate}
         currentColor={currentColor}
         setCurrentColor={setCurrentColor}
+        clearCanvas={clearCanvas}
+        onToggleCodeEditor={toggleCodeEditor}
+        showCodeEditor={showCodeEditor}
       />
 
       <Stage
         width={width}
         height={height}
-        onMouseDown={handleMouseDown}
+        onMouseDown={(e) => {
+          if (e.target === e.target.getStage()) {
+            deselectElement();
+          }
+          handleMouseDown(e);
+        }}
         onMouseMove={handleMouseMove}
         onMouseUp={handleMouseUp}
       >
         <Whiteboard lines={lines} />
         <DraggableShapes
           shapes={shapes}
-          onDragStart={handleDragStart}
-          onDragEnd={handleDragEnd}
+          onDragStart={handleShapeDragStart}
+          onDragEnd={handleShapeDragEnd}
+          selection={selection}
+          setSelection={setSelection}
         />
         {texts.map((text) => (
           <Layer key={text.id}>
@@ -246,16 +360,30 @@ export default function MultiLayerCanvas() {
               text={text.text}
               position={text.position}
               color={text.color}
-              isDragging={text.isDragging}
-              editing={text.isEditing}
+              fontSize={text.fontSize}
+              editing={
+                text.isEditing &&
+                selection.type === 'text' &&
+                selection.id === text.id
+              }
               onDragStart={() => handleTextDragStart(text.id)}
               onDragEnd={(e) => handleTextDragEnd(text.id, e)}
-              onDoubleClick={() => handleTextDoubleClick(text.id)}
+              // onDoubleClick={() => selectElement('text', text.id)}
               onUpdate={(id, newText) => handleTextUpdate(id, newText)}
+              isSelected={selection.type === 'text' && selection.id === text.id}
+              onSelect={selectElement}
+              saveHistory={saveHistory}
             />
           </Layer>
         ))}
       </Stage>
+      {showCodeEditor && (
+        <Draggable defaultPosition={{ x: 200, y: -300 }}>
+          <div style={{ position: 'absolute', zIndex: 1000 }}>
+            <CodeEditor />
+          </div>
+        </Draggable>
+      )}
     </>
   );
 }

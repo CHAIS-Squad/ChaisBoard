@@ -13,3 +13,12 @@ class CanvasTemplate(models.Model):
 
     def get_absolute_url(self):
         return reverse('canvas_template_detail', args=[str(self.id)])
+
+
+class PublicCanvasTemplate(models.Model):
+    name = models.CharField(max_length=32)
+    description = models.CharField(max_length=256)
+    konva_objects = models.JSONField(default=list, null=True)
+
+    def get_absolute_url(self):
+        return reverse('canvas_template_detail', args=[str(self.id)])
