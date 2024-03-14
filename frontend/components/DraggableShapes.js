@@ -8,8 +8,7 @@ export default function DraggableShapes({
   selection,
   setSelection,
 }) {
-  console.log("Shapes in DraggableShapes: ", shapes); 
-  
+ 
   const transformerRef = useRef(null);
   const layerRef = useRef(null);
 

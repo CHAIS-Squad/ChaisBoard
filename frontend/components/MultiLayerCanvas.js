@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { Stage, Layer, Text, Rect, Circle, Star, Arrow } from 'react-konva';
 import dynamic from 'next/dynamic';
 import Sidebar from './Sidebar';
@@ -51,24 +51,6 @@ export default function MultiLayerCanvas() {
     setTexts(updatedTexts);
   };
 
-  // useEffect(() => {
-  //   const handleKeyDown = (e) => {
-  //     if ((e.ctrlKey || e.metaKey) && e.key === 'z') {
-  //       e.preventDefault();
-  //       handleUndo();
-  //     } else if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === 'z') {
-  //       e.preventDefault();
-  //       handleRedo();
-  //     }
-  //   };
-
-  //   window.addEventListener('keydown', handleKeyDown);
-
-  //   return () => {
-  //     window.removeEventListener('keydown', handleKeyDown);
-  //   };
-  // }, [lines, shapes]);
-
   const handleMouseDown = (e) => {
     // Check if the click target is the stage (background), indicating a click outside any shape
     if (e.target === e.target.getStage()) {
@@ -77,7 +59,6 @@ export default function MultiLayerCanvas() {
       isDrawing.current = true;
       const newLine = { points: [], color: currentColor };
       setLines((prevLines) => [...prevLines, newLine]);
-      saveHistory();
     } else {
       isDrawing.current = false;
     }
@@ -98,6 +79,7 @@ export default function MultiLayerCanvas() {
 
   const handleMouseUp = () => {
     isDrawing.current = false;
+    saveHistory();
   };
 
   // Function to add a new shape based on the selected type
@@ -108,7 +90,7 @@ export default function MultiLayerCanvas() {
       color: currentColor,
       x: 300,
       y: 100,
-      rotation: Math.random() * 180,
+      rotation: 0,
       isDragging: false, // Initial dragging state is false
     };
     setShapes((prevShapes) => [...prevShapes, newShape]);
@@ -116,26 +98,36 @@ export default function MultiLayerCanvas() {
   };
 
   const saveHistory = () => {
-    const newHistory = history.slice(0, historyStep + 1);
-    setHistory([...newHistory, { lines, shapes }]);
-    setHistoryStep(historyStep + 1);
+    const currentStepHistory = {
+      lines: [...lines],
+      shapes: [...shapes],
+      texts: [...texts],
+    };
+    const newHistory = history.slice(0, historyStep + 1); // Remove "future" states if any
+    newHistory.push(currentStepHistory);
+    setHistory(newHistory);
+    setHistoryStep(newHistory.length - 1); // Update the current step
   };
 
-  const handleUndo = () => {
+  const handleUndo = useCallback(() => {
     if (historyStep > 0) {
+      const previousStep = history[historyStep - 1];
+      setLines(previousStep.lines);
+      setShapes(previousStep.shapes);
+      setTexts(previousStep.texts);
       setHistoryStep(historyStep - 1);
-      setShapes(history[historyStep - 1].shapes);
-      setLines(history[historyStep - 1].lines);
     }
-  };
+  }, [history, historyStep]); // Dependencies
 
-  const handleRedo = () => {
+  const handleRedo = useCallback(() => {
     if (historyStep < history.length - 1) {
+      const nextStep = history[historyStep + 1];
+      setLines(nextStep.lines);
+      setShapes(nextStep.shapes);
+      setTexts(nextStep.texts);
       setHistoryStep(historyStep + 1);
-      setShapes(history[historyStep + 1].shapes);
-      setLines(history[historyStep + 1].lines);
     }
-  };
+  }, [history, historyStep]); // Dependencies
 
   const width = window.innerWidth;
   const height = window.innerHeight;
@@ -276,21 +268,40 @@ export default function MultiLayerCanvas() {
     };
     return templateObjects;
   }
-  // Inside MultiLayerCanvas component
-useEffect(() => {
-  const handleKeyDown = (e) => {
-    if ((e.key === 'Delete' || e.key === 'Backspace') && selection.id) {
-      e.preventDefault();
-      setShapes(shapes => shapes.filter(shape => shape.id !== selection.id));
-      setSelection({ type: null, id: null }); // Clear selection
-    }
-  };
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      // Handle delete functionality
+      if ((e.key === 'Delete' || e.key === 'Backspace') && selection.id) {
+        e.preventDefault();
+        setShapes((shapes) =>
+          shapes.filter((shape) => shape.id !== selection.id)
+        );
+        setSelection({ type: null, id: null }); // Clear selection
+      }
+      // Handle undo functionality
+      else if ((e.ctrlKey || e.metaKey) && e.key === 'z') {
+        e.preventDefault();
+        handleUndo();
+      }
+      // Handle redo functionality
+      else if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === 'Z') {
+        // Capital 'Z' for shift combination
+        e.preventDefault();
+        handleRedo();
+      }
+    };
 
-  window.addEventListener('keydown', handleKeyDown);
-  return () => window.removeEventListener('keydown', handleKeyDown);
-}, [selection, setShapes, setSelection]);
-
-  
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [
+    selection,
+    setShapes,
+    setSelection,
+    handleUndo,
+    handleRedo,
+    lines,
+    shapes,
+  ]);
 
   return (
     <>
