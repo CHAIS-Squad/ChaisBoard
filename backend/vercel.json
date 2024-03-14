@@ -1,14 +1,14 @@
 {
     "builds": [
         {
-            "src": "project/wsgi.py",
+            "src": "chaisboardapi/wsgi.py",
             "use": "@vercel/python"
         }
     ],
     "routes": [
         {
             "src": "/(.*)",
-            "dest": "project/wsgi.py"
+            "dest": "chaisboardapi/wsgi.py"
         }
     ]
 }
