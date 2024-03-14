@@ -356,6 +356,7 @@ export default function MultiLayerCanvas() {
               onDoubleClick={() => selectElement('text', text.id)}
               onUpdate={(id, newText) => handleTextUpdate(id, newText)}
               isSelected={selection.type === 'text' && selection.id === text.id}
+              saveHistory={saveHistory}
             />
           </Layer>
         ))}

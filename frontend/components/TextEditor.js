@@ -13,11 +13,14 @@ export default function TextEditor({
   editing,
   onDoubleClick,
   isSelected,
+  saveHistory,
 }) {
 
   const textRef = useRef(null);
   const transformerRef = useRef(null);
   const [editingText, setEditingText] = useState(text);
+
+  
 
   // Effect to handle the creation and removal of the textarea for editing
   useEffect(() => {
@@ -39,21 +42,35 @@ export default function TextEditor({
       document.body.appendChild(textareaElement);
       textareaElement.focus();
   
-      const handleOutsideClickOrEnter = (e) => {
-        if (e.type === 'click' && e.target !== textareaElement || e.key === 'Enter') {
+      const handleTextareaKeyDown = (e) => {
+        // Prevent global shortcuts when typing in the textarea
+        e.stopPropagation();
+  
+        // Special handling for the Enter key without Shift
+        if (e.key === 'Enter' && !e.shiftKey) {
           setEditingText(textareaElement.value);
-          onUpdate(id, { text: textareaElement.value, fontSize: fontSize }); // Include fontSize if you wish to update it upon text edit confirmation
+          onUpdate(id, { text: textareaElement.value, fontSize: fontSize });
           document.body.removeChild(textareaElement);
         }
       };
   
-      window.addEventListener('click', handleOutsideClickOrEnter);
-      textareaElement.addEventListener('keydown', handleOutsideClickOrEnter);
+      const handleOutsideClick = (e) => {
+        if (e.type === 'click' && e.target !== textareaElement) {
+          setEditingText(textareaElement.value);
+          onUpdate(id, { text: textareaElement.value, fontSize: fontSize });
+          document.body.removeChild(textareaElement);
+        }
+      };
   
-      // Cleanup function to remove event listeners and the textarea
+      // Listen for keydown events on the textarea
+      textareaElement.addEventListener('keydown', handleTextareaKeyDown);
+      // Listen for click events on the window
+      window.addEventListener('click', handleOutsideClick);
+  
       return () => {
-        window.removeEventListener('click', handleOutsideClickOrEnter);
-        textareaElement.removeEventListener('keydown', handleOutsideClickOrEnter);
+        // Cleanup
+        textareaElement.removeEventListener('keydown', handleTextareaKeyDown);
+        window.removeEventListener('click', handleOutsideClick);
         if (document.body.contains(textareaElement)) {
           document.body.removeChild(textareaElement);
         }
