@@ -2,10 +2,10 @@ from rest_framework.generics import ListAPIView, CreateAPIView, RetrieveUpdateDe
 from rest_framework import permissions
 from .models import CanvasTemplate, PublicCanvasTemplate
 from .serializers import CanvasTemplateSerializer, CanvasTemplateListSerializer, PublicCanvasTemplateSerializer, PublicCanvasTemplateListSerializer
+from .permissions import IsAdminOrReadOnly
 
 
 class CanvasTemplateList(ListAPIView):
-    # queryset = CanvasTemplate.objects.all()
     serializer_class = CanvasTemplateListSerializer
     permission_classes = [permissions.IsAuthenticated,]
 
@@ -28,7 +28,12 @@ class PublicCanvasTemplateList(ListAPIView):
     serializer_class = PublicCanvasTemplateListSerializer
     permission_classes = [permissions.AllowAny,]
 
-class PublicCanvasTemplateDetail(RetrieveAPIView):
+class PublicCanvasTemplateDetail(RetrieveUpdateDestroyAPIView):
     queryset = PublicCanvasTemplate.objects.all()
     serializer_class = PublicCanvasTemplateSerializer
-    permission_classes = [permissions.AllowAny,]
+    permission_classes = [IsAdminOrReadOnly,]
+
+class PublicCanvasTemplateCreate(CreateAPIView):
+    queryset = PublicCanvasTemplate.objects.all()
+    serializer_class = PublicCanvasTemplateSerializer
+    permission_classes = [permissions.IsAdminUser,]

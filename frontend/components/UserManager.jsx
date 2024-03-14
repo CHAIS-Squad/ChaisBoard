@@ -39,15 +39,16 @@ function UserButton({ setShowLoginModal, setShowSignUpModal }) {
     <>
       {user ? (
         <SplitButton
-          title={user.username}
+          title={'Logout'}
           variant="outline-secondary"
           size="sm"
           drop="up"
           align={{ offset: [0, 0] }}
+          onClick={logout}
           className="mb-2"
         >
-          <Dropdown.Item eventKey="1" onClick={logout}>
-            Logout
+          <Dropdown.Item eventKey="1">
+            Account
           </Dropdown.Item>
         </SplitButton>
       ) : (
