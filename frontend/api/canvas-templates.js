@@ -38,7 +38,6 @@ function useCanvasTemplates() {
         body: JSON.stringify(newTemplate),
         ...options,
       });
-      console.log(options.headers);
       const data = await response.json();
       return data;
     } catch (error) {

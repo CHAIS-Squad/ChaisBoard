@@ -42,6 +42,8 @@ function UserButton({ setShowLoginModal, setShowSignUpModal }) {
           title={user.username}
           variant="outline-secondary"
           size="sm"
+          drop="up"
+          align={{ offset: [0, 0] }}
           className="mb-2"
         >
           <Dropdown.Item eventKey="1" onClick={logout}>
