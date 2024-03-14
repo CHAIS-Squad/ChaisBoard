@@ -71,6 +71,8 @@ const Sidebar = ({
   clearCanvas,
   onToggleCodeEditor,
   showCodeEditor,
+  isSelectionMode,
+  onToggleSelectionMode,
 }) => {
   return (
     <div
@@ -155,6 +157,16 @@ const Sidebar = ({
         className='mb-2'
       >
         {showCodeEditor ? 'Hide Code Editor' : 'Show Code Editor'}
+      </Button>
+      <Button
+        onClick={onToggleSelectionMode}
+        variant='outline-secondary'
+        size='sm'
+        className='mb-2'
+      >
+        {isSelectionMode
+          ? 'Switch to Drawing Mode'
+          : 'Switch to Selection Mode'}
       </Button>
       <Button
         onClick={clearCanvas}

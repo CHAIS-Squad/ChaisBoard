@@ -41,11 +41,9 @@ export default function TextEditor({
       textareaElement.focus();
 
       const handleTextareaKeyDown = (e) => {
-        // Prevent global shortcuts when typing in the textarea
-        e.stopPropagation();
-
-        // Special handling for the Enter key without Shift
+        // Only stop propagation for Enter key without Shift
         if (e.key === 'Enter' && !e.shiftKey) {
+          e.stopPropagation();
           setEditingText(textareaElement.value);
           onUpdate(id, { text: textareaElement.value, fontSize: fontSize });
           document.body.removeChild(textareaElement);
@@ -77,9 +75,23 @@ export default function TextEditor({
   }, [editing, id, onUpdate, position, editingText, fontSize]);
 
   // Effect for handling Konva Transformer
+  // useEffect(() => {
+  //   if (isSelected && transformerRef.current) {
+  //     transformerRef.current.nodes([textRef.current]);
+  //     transformerRef.current.getLayer().batchDraw();
+  //   }
+  // }, [isSelected]);
   useEffect(() => {
-    if (isSelected && transformerRef.current) {
-      transformerRef.current.nodes([textRef.current]);
+    if (transformerRef.current) {
+      if (isSelected) {
+        // Attach the transformer to the selected node
+        transformerRef.current.nodes([textRef.current]);
+      } else {
+        // Ensure the transformer is detached from all nodes when not selected
+        if (transformerRef.current.nodes().length) {
+          transformerRef.current.detach();
+        }
+      }
       transformerRef.current.getLayer().batchDraw();
     }
   }, [isSelected]);
@@ -120,14 +132,15 @@ export default function TextEditor({
   return (
     <Group>
       <Text
+        id={id}
         x={position.x}
         y={position.y}
         text={!editing ? editingText : ''}
         fontSize={fontSize}
         fill={color}
         draggable={!editing}
-        onDragStart={onDragStart}
-        onDragEnd={onDragEnd}
+        onDragStart={(e) => onDragStart(id, e)}
+        onDragEnd={(e) => onDragEnd(id, e)}
         onClick={handleTextClick}
         onDblClick={handleDoubleClick}
         ref={textRef}
