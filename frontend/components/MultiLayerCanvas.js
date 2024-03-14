@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { Stage, Layer, Text, Rect, Circle, Star, Arrow } from 'react-konva';
 import dynamic from 'next/dynamic';
 import Sidebar from './Sidebar';
@@ -27,11 +27,11 @@ export default function MultiLayerCanvas() {
   const [currentColor, setCurrentColor] = useState('#000000');
   const [selection, setSelection] = useState({ type: null, id: null });
 
-  const selectElement = (type, id) => {
+  const selectElement = (type, id, isDoubleClick) => {
     setSelection({ type, id });
-
-    // Check if a text element is selected and toggle its editing mode
-    if (type === 'text') {
+  
+    // Check if a text element is selected and toggle its editing mode only on double-click
+    if (type === 'text' && isDoubleClick) {
       const updatedTexts = texts.map((text) => {
         if (text.id === id) {
           return { ...text, isEditing: true }; // Enable editing mode for the selected text
@@ -41,6 +41,8 @@ export default function MultiLayerCanvas() {
       setTexts(updatedTexts);
     }
   };
+  
+  
 
   const deselectElement = () => {
     // Deselect all elements
@@ -51,31 +53,16 @@ export default function MultiLayerCanvas() {
     setTexts(updatedTexts);
   };
 
-  useEffect(() => {
-    const handleKeyDown = (e) => {
-      if ((e.ctrlKey || e.metaKey) && e.key === 'z') {
-        e.preventDefault();
-        handleUndo();
-      } else if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === 'z') {
-        e.preventDefault();
-        handleRedo();
-      }
-    };
-
-    window.addEventListener('keydown', handleKeyDown);
-
-    return () => {
-      window.removeEventListener('keydown', handleKeyDown);
-    };
-  }, [lines, shapes]);
-
   const handleMouseDown = (e) => {
+    // Check if the click target is the stage (background), indicating a click outside any shape
     if (e.target === e.target.getStage()) {
+      deselectElement(); // This should effectively reset selection state
+
       isDrawing.current = true;
-      // Start a new line with the current color
       const newLine = { points: [], color: currentColor };
       setLines((prevLines) => [...prevLines, newLine]);
-      saveHistory();
+    } else {
+      isDrawing.current = false;
     }
   };
 
@@ -94,16 +81,18 @@ export default function MultiLayerCanvas() {
 
   const handleMouseUp = () => {
     isDrawing.current = false;
+    saveHistory();
   };
 
   // Function to add a new shape based on the selected type
   const addShape = () => {
     const newShape = {
       id: `${selectedShape}-${shapes.length}`, // Use selectedShape instead of selectedShapeType
-      shapeType: selectedShape, // This correctly refers to the state variable holding the selected shape type
-      x: Math.max(210, Math.random() * window.innerWidth * 0.8),
-      y: Math.random() * window.innerHeight * 0.8,
-      rotation: Math.random() * 180,
+      shapeType: selectedShape,
+      color: currentColor,
+      x: 300,
+      y: 100,
+      rotation: 0,
       isDragging: false, // Initial dragging state is false
     };
     setShapes((prevShapes) => [...prevShapes, newShape]);
@@ -111,31 +100,41 @@ export default function MultiLayerCanvas() {
   };
 
   const saveHistory = () => {
-    const newHistory = history.slice(0, historyStep + 1);
-    setHistory([...newHistory, { lines, shapes }]);
-    setHistoryStep(historyStep + 1);
+    const currentStepHistory = {
+      lines: [...lines],
+      shapes: [...shapes],
+      texts: [...texts],
+    };
+    const newHistory = history.slice(0, historyStep + 1); // Remove "future" states if any
+    newHistory.push(currentStepHistory);
+    setHistory(newHistory);
+    setHistoryStep(newHistory.length - 1); // Update the current step
   };
 
-  const handleUndo = () => {
+  const handleUndo = useCallback(() => {
     if (historyStep > 0) {
+      const previousStep = history[historyStep - 1];
+      setLines(previousStep.lines);
+      setShapes(previousStep.shapes);
+      setTexts(previousStep.texts);
       setHistoryStep(historyStep - 1);
-      setShapes(history[historyStep - 1].shapes);
-      setLines(history[historyStep - 1].lines);
     }
-  };
+  }, [history, historyStep]); // Dependencies
 
-  const handleRedo = () => {
+  const handleRedo = useCallback(() => {
     if (historyStep < history.length - 1) {
+      const nextStep = history[historyStep + 1];
+      setLines(nextStep.lines);
+      setShapes(nextStep.shapes);
+      setTexts(nextStep.texts);
       setHistoryStep(historyStep + 1);
-      setShapes(history[historyStep + 1].shapes);
-      setLines(history[historyStep + 1].lines);
     }
-  };
+  }, [history, historyStep]); // Dependencies
 
   const width = window.innerWidth;
   const height = window.innerHeight;
 
-  const handleDragStart = (shapeId) => {
+  const handleShapeDragStart = (shapeId) => {
     const updatedShapes = shapes.map((shape) => {
       if (shape.id === shapeId) {
         return { ...shape, isDragging: true };
@@ -146,7 +145,7 @@ export default function MultiLayerCanvas() {
     saveHistory();
   };
 
-  const handleDragEnd = (shapeId, newPos) => {
+  const handleShapeDragEnd = (shapeId, newPos) => {
     const updatedShapes = shapes.map((shape) => {
       if (shape.id === shapeId) {
         return { ...shape, ...newPos, isDragging: false };
@@ -209,21 +208,21 @@ export default function MultiLayerCanvas() {
           ...text,
           ...updateProps, // Apply updates, which may include text, fontSize, and/or position
           position: { ...text.position, ...updateProps.position }, // Ensure position updates are merged
-          isEditing: false // Ensure we exit editing mode
+          isEditing: false, // Ensure we exit editing mode
         };
       }
       return text;
     });
-    
+
     setTexts(updatedTexts);
     saveHistory();
-};
+  };
 
   const addText = () => {
     const newText = {
-      id: `text-${texts.length}`, // Ensuring each text has a unique ID
+      id: `text-${texts.length}`,
       position: { x: 200, y: texts.length * 20 + 100 },
-      text: 'New Text',
+      text: 'Hello World',
       color: currentColor,
       isDragging: false,
       isEditing: false,
@@ -231,6 +230,7 @@ export default function MultiLayerCanvas() {
     setTexts((prevTexts) => [...prevTexts, newText]);
     saveHistory();
   };
+
 
   const clearCanvas = () => {
     setLines([]);
@@ -278,6 +278,40 @@ export default function MultiLayerCanvas() {
     };
     return templateObjects;
   }
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      // Handle delete functionality
+      if ((e.key === 'Delete' || e.key === 'Backspace') && selection.id) {
+        e.preventDefault();
+        setShapes((shapes) =>
+          shapes.filter((shape) => shape.id !== selection.id)
+        );
+        setSelection({ type: null, id: null }); // Clear selection
+      }
+      // Handle undo functionality
+      else if ((e.ctrlKey || e.metaKey) && e.key === 'z') {
+        e.preventDefault();
+        handleUndo();
+      }
+      // Handle redo functionality
+      else if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === 'Z') {
+        // Capital 'Z' for shift combination
+        e.preventDefault();
+        handleRedo();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [
+    selection,
+    setShapes,
+    setSelection,
+    handleUndo,
+    handleRedo,
+    lines,
+    shapes,
+  ]);
 
   return (
     <>
@@ -306,13 +340,14 @@ export default function MultiLayerCanvas() {
         }}
         onMouseMove={handleMouseMove}
         onMouseUp={handleMouseUp}
-        
       >
         <Whiteboard lines={lines} />
         <DraggableShapes
           shapes={shapes}
-          onDragStart={handleDragStart}
-          onDragEnd={handleDragEnd}
+          onDragStart={handleShapeDragStart}
+          onDragEnd={handleShapeDragEnd}
+          selection={selection}
+          setSelection={setSelection}
         />
         {texts.map((text) => (
           <Layer key={text.id}>
@@ -329,9 +364,11 @@ export default function MultiLayerCanvas() {
               }
               onDragStart={() => handleTextDragStart(text.id)}
               onDragEnd={(e) => handleTextDragEnd(text.id, e)}
-              onDoubleClick={() => selectElement('text', text.id)}
+              // onDoubleClick={() => selectElement('text', text.id)}
               onUpdate={(id, newText) => handleTextUpdate(id, newText)}
               isSelected={selection.type === 'text' && selection.id === text.id}
+              onSelect={selectElement}
+              saveHistory={saveHistory}
             />
           </Layer>
         ))}
