@@ -5,36 +5,65 @@ import { useAuth } from "@/contexts/auth";
 // bootstrap
 import Button from "react-bootstrap/Button";
 import Modal from "react-bootstrap/Modal";
+import Dropdown from "react-bootstrap/Dropdown";
+import SplitButton from "react-bootstrap/SplitButton";
 
 function UserManager() {
-  const { user, logout } = useAuth();
   const [showLoginModal, setShowLoginModal] = useState(false);
+  const [showSignUpModal, setShowSignUpModal] = useState(false);
 
   return (
-    <div>
-      {user ? (
-        <Button
-          onClick={logout}
-          variant="outline-secondary"
-          size="sm"
-          className="mb-2"
-        >
-          Logout
-        </Button>
-      ) : (
-        <Button
-          onClick={() => setShowLoginModal(true)}
-          variant="outline-secondary"
-          size="sm"
-          className="mb-2"
-        >Login</Button>
-      )}
+    <div className="fixed bottom-0">
+      <UserButton
+        setShowLoginModal={setShowLoginModal}
+        setShowSignUpModal={setShowSignUpModal}
+      />
 
       <LoginModal
         show={showLoginModal}
         handleClose={() => setShowLoginModal(false)}
       />
+
+      <SignUpModal
+        show={showSignUpModal}
+        handleClose={() => setShowSignUpModal(false)}
+      />
     </div>
+  );
+}
+
+function UserButton({ setShowLoginModal, setShowSignUpModal }) {
+  const { user, logout } = useAuth();
+
+  return (
+    <>
+      {user ? (
+        <SplitButton
+          title={user.username}
+          variant="outline-secondary"
+          size="sm"
+          className="mb-2"
+        >
+          <Dropdown.Item eventKey="1" onClick={logout}>
+            Logout
+          </Dropdown.Item>
+        </SplitButton>
+      ) : (
+        <SplitButton
+          title="Login"
+          onClick={() => setShowLoginModal(true)}
+          variant="outline-secondary"
+          size="sm"
+          drop="up"
+          align={{ offset: [0, 0] }}
+          className="mb-2"
+        >
+          <Dropdown.Item eventKey="1" onClick={() => setShowSignUpModal(true)}>
+            Sign Up
+          </Dropdown.Item>
+        </SplitButton>
+      )}
+    </>
   );
 }
 
@@ -82,6 +111,19 @@ function LoginModal({ show, handleClose }) {
             Login
           </Button>
         </form>
+      </Modal.Body>
+    </Modal>
+  );
+}
+
+function SignUpModal({ show, handleClose }) {
+  return (
+    <Modal show={show} onHide={handleClose}>
+      <Modal.Header closeButton>
+        <Modal.Title>Sign Up</Modal.Title>
+      </Modal.Header>
+      <Modal.Body>
+        <p>Sign Up Coming Soon</p>
       </Modal.Body>
     </Modal>
   );
