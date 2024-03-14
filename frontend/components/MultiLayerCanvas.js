@@ -273,6 +273,7 @@ const handleTextDragEnd = (e) => {
     setTexts(updatedTexts);
     saveHistory();
   };
+  
 
   const addText = () => {
     const newTextId = `text-${texts.length}`;
