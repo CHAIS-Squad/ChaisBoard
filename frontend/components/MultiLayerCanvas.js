@@ -276,40 +276,21 @@ export default function MultiLayerCanvas() {
     };
     return templateObjects;
   }
-  useEffect(() => {
-    const handleKeyDown = (e) => {
-      if ((e.ctrlKey || e.metaKey) && e.key === 'z') {
-        e.preventDefault();
-        handleUndo();
-      } else if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === 'z') {
-        e.preventDefault();
-        handleRedo();
-      } else if (e.key === 'Delete' || e.key === 'Backspace') {
-        e.preventDefault();
-        console.log('Key pressed: ', e.key);
-        if (selection.id) {
-          console.log('Attempting to delete: ', selection.type, selection.id);
-          if (selection.type === 'shape') {
-            const newShapes = shapes.filter(
-              (shape) => shape.id !== selection.id
-            );
-            console.log('New shapes after deletion: ', newShapes); // Debugging line
-            setShapes(newShapes);
-          } else if (selection.type === 'text') {
-            const newTexts = texts.filter((text) => text.id !== selection.id);
-            console.log('New texts after deletion: ', newTexts); // Debugging line
-            setTexts(newTexts);
-          }
-          deselectElement();
-        }
-      }
-    };
+  // Inside MultiLayerCanvas component
+useEffect(() => {
+  const handleKeyDown = (e) => {
+    if ((e.key === 'Delete' || e.key === 'Backspace') && selection.id) {
+      e.preventDefault();
+      setShapes(shapes => shapes.filter(shape => shape.id !== selection.id));
+      setSelection({ type: null, id: null }); // Clear selection
+    }
+  };
 
-    window.addEventListener('keydown', handleKeyDown);
-    return () => {
-      window.removeEventListener('keydown', handleKeyDown);
-    };
-  }, [selection, shapes, texts, deselectElement, handleUndo, handleRedo]);
+  window.addEventListener('keydown', handleKeyDown);
+  return () => window.removeEventListener('keydown', handleKeyDown);
+}, [selection, setShapes, setSelection]);
+
+  
 
   return (
     <>
