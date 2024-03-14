@@ -9,7 +9,6 @@ export default function DraggableShapes({
   setSelection,
   selectedObjects,
 }) {
- 
   const transformerRef = useRef(null);
   const layerRef = useRef(null);
 
@@ -32,25 +31,35 @@ export default function DraggableShapes({
   //     transformerRef.current.getLayer().batchDraw();
   //   }
   // }, [selection, shapes]);
-  
-  useEffect(() => {
-    // Ensure selectedObjects is treated as an array even if undefined
-    const safeSelectedObjects = selectedObjects || [];
-    
-    if (transformerRef.current && safeSelectedObjects.length > 0) {
-      const nodes = safeSelectedObjects.map(({ id }) =>
-        layerRef.current.findOne(`#${id}`)
-      ).filter(node => node); // Filter out undefined nodes
-  
-      transformerRef.current.nodes(nodes);
-      transformerRef.current.getLayer().batchDraw();
-    } else {
-      transformerRef.current?.nodes([]);
-    }
-  }, [selectedObjects]); // Still depend on selectedObjects for reactivity
-  
-  
 
+  useEffect(() => {
+    // Check if the transformer exists
+    if (transformerRef.current) {
+      let nodes = [];
+
+      // Handle individual selection
+      if (selection.id && !selectedObjects.length) {
+        const selectedNode = transformerRef.current
+          .getStage()
+          .findOne(`#${selection.id}`);
+        if (selectedNode) {
+          nodes = [selectedNode];
+        }
+      }
+      // Handle multiple selections from the selection rectangle
+      else if (selectedObjects.length > 0) {
+        nodes = selectedObjects
+          .map(({ id }) => transformerRef.current.getStage().findOne(`#${id}`))
+          .filter((node) => node); // Filter out undefined to ensure only valid nodes are included
+      }
+
+      // Update transformer nodes based on current selection
+      transformerRef.current.nodes(nodes);
+
+      // Ensure we redraw the layer to reflect changes
+      transformerRef.current.getLayer().batchDraw();
+    }
+  }, [selection, selectedObjects, shapes]); // Depend on both selection and selectedObjects
 
   return (
     <Layer ref={layerRef}>
@@ -64,6 +73,8 @@ export default function DraggableShapes({
           draggable: true,
           fill: shape.color,
           stroke: shape.color,
+          scaleX: shape.scaleX, // Use scaleX from shape's state
+          scaleY: shape.scaleY, // Use scaleY from shape's state
           onDragStart: (e) => {
             e.cancelBubble = true;
             onDragStart(shape.id);
@@ -72,11 +83,19 @@ export default function DraggableShapes({
           },
           onDragEnd: (e) => {
             e.cancelBubble = true;
-            onDragEnd(shape.id, { x: e.target.x(), y: e.target.y() });
+            if (e.target) {
+              // Ensure e.target exists before accessing properties
+              onDragEnd(shape.id, {
+                x: e.target.x(),
+                y: e.target.y(),
+                scaleX: e.target.scaleX() || 1, // Use existing scale or default to 1
+                scaleY: e.target.scaleY() || 1, // Use existing scale or default to 1
+              });
+            } else {
+              console.error('Drag end event target is undefined');
+            }
           },
-          scaleX: shape.isDragging ? 1.2 : 1,
-          scaleY: shape.isDragging ? 1.2 : 1,
-          // New: select shape on click
+          // Removed the isDragging scaling logic
           onClick: () => setSelection({ type: shape.shapeType, id: shape.id }),
         };
 

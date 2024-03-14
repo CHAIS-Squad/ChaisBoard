@@ -173,16 +173,25 @@ export default function MultiLayerCanvas() {
     saveHistory();
   };
 
-  const handleShapeDragEnd = (shapeId, newPos) => {
+  const handleShapeDragEnd = (shapeId, { x, y, scaleX, scaleY }) => {
     const updatedShapes = shapes.map((shape) => {
       if (shape.id === shapeId) {
-        return { ...shape, ...newPos, isDragging: false };
+        return {
+          ...shape,
+          x, y, 
+          scaleX: scaleX || 1, // Safely default to 1 if undefined
+          scaleY: scaleY || 1, // Safely default to 1 if undefined
+          isDragging: false
+        };
       }
       return shape;
     });
     setShapes(updatedShapes);
     saveHistory();
   };
+  
+  
+  
 
   const handleTextDragStart = (textId) => {
     const updatedTexts = texts.map((text) => {
