@@ -49,7 +49,6 @@ export default function TextEditor({
           document.body.removeChild(textareaElement);
         }
       };
-      
 
       const handleOutsideClick = (e) => {
         if (e.type === 'click' && e.target !== textareaElement) {
@@ -76,12 +75,27 @@ export default function TextEditor({
   }, [editing, id, onUpdate, position, editingText, fontSize]);
 
   // Effect for handling Konva Transformer
+  // useEffect(() => {
+  //   if (isSelected && transformerRef.current) {
+  //     transformerRef.current.nodes([textRef.current]);
+  //     transformerRef.current.getLayer().batchDraw();
+  //   }
+  // }, [isSelected]);
   useEffect(() => {
-    if (isSelected && transformerRef.current) {
-      transformerRef.current.nodes([textRef.current]);
+    if (transformerRef.current) {
+      if (isSelected) {
+        // Attach the transformer to the selected node
+        transformerRef.current.nodes([textRef.current]);
+      } else {
+        // Ensure the transformer is detached from all nodes when not selected
+        if (transformerRef.current.nodes().length) {
+          transformerRef.current.detach();
+        }
+      }
       transformerRef.current.getLayer().batchDraw();
     }
   }, [isSelected]);
+  
 
   // Handle resize and transform end
   const handleTransformEnd = () => {

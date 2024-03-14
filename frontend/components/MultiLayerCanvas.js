@@ -178,10 +178,11 @@ export default function MultiLayerCanvas() {
       if (shape.id === shapeId) {
         return {
           ...shape,
-          x, y, 
+          x,
+          y,
           scaleX: scaleX || 1, // Safely default to 1 if undefined
           scaleY: scaleY || 1, // Safely default to 1 if undefined
-          isDragging: false
+          isDragging: false,
         };
       }
       return shape;
@@ -189,9 +190,6 @@ export default function MultiLayerCanvas() {
     setShapes(updatedShapes);
     saveHistory();
   };
-  
-  
-  
 
   const handleTextDragStart = (textId) => {
     const updatedTexts = texts.map((text) => {
@@ -258,7 +256,7 @@ export default function MultiLayerCanvas() {
   const addText = () => {
     const newText = {
       id: `text-${texts.length}`,
-      position: { x: 200, y: texts.length * 20 + 100 },
+      position: { x: 300, y: texts.length * 20 + 100 },
       text: 'Hello World',
       color: currentColor,
       isDragging: false,
@@ -365,17 +363,12 @@ export default function MultiLayerCanvas() {
 
   const identifySelectedObjects = () => {
     const rect = {
-      x1: selectionRect.x,
-      y1: selectionRect.y,
-      x2:
-        selectionRect.x +
-        (selectionRect.width < 0 ? -selectionRect.width : selectionRect.width),
-      y2:
-        selectionRect.y +
-        (selectionRect.height < 0
-          ? -selectionRect.height
-          : selectionRect.height),
+      x1: Math.min(selectionRect.x, selectionRect.x + selectionRect.width),
+      y1: Math.min(selectionRect.y, selectionRect.y + selectionRect.height),
+      x2: Math.max(selectionRect.x, selectionRect.x + selectionRect.width),
+      y2: Math.max(selectionRect.y, selectionRect.y + selectionRect.height),
     };
+
     if (selectionRect.width < 0) {
       rect.x1 = selectionRect.x + selectionRect.width;
     }
@@ -385,27 +378,62 @@ export default function MultiLayerCanvas() {
 
     const selected = [];
 
-    // Example for shapes, repeat similarly for texts and lines if applicable
+    // Handle shapes selection
     shapes.forEach((shape) => {
       if (isWithinSelectionRect(shape, rect)) {
         selected.push({ type: 'shape', id: shape.id });
       }
     });
 
-    // TODO: Add similar logic for texts and lines
+    // Handle texts
+    texts.forEach((text) => {
+      // If text.width and text.height are not directly available, estimate or calculate these values.
+      // Example: Use a default width and height if not set
+      const textWidth = text.width || 100; // Default width if not set
+      const textHeight = text.height || 20; // Default height if not set
+
+      const textRect = {
+        x1: text.position.x,
+        y1: text.position.y,
+        x2: text.position.x + textWidth,
+        y2: text.position.y + textHeight,
+      };
+
+      // Debugging output to help troubleshoot selection issues
+      console.log(`Evaluating text: ${text.id}`);
+      console.log(
+        `Text position and size: x=${text.position.x}, y=${text.position.y}, width=${textWidth}, height=${textHeight}`
+      );
+      console.log(
+        `Selection rect: x1=${rect.x1}, y1=${rect.y1}, x2=${rect.x2}, y2=${rect.y2}`
+      );
+
+      // Determine if the text object is within the selection rectangle
+      const isWithinSelection =
+        rect.x1 < textRect.x2 &&
+        rect.x2 > textRect.x1 &&
+        rect.y1 < textRect.y2 &&
+        rect.y2 > textRect.y1;
+      console.log(`Is within rect: ${isWithinSelection}`);
+
+      if (isWithinSelection) {
+        selected.push({ type: 'text', id: text.id });
+      }
+    });
+
     setSelectedObjects(selected);
   };
 
   const isWithinSelectionRect = (object, rect) => {
     // Adjust calculation based on object type if necessary
-    const objectRight = object.x + (object.width || 0); // Add object.width if shape, adjust for lines/texts
-    const objectBottom = object.y + (object.height || 0); // Add object.height if shape, adjust for lines/texts
+    const objRight = object.x + (object.width || 100);
+    const objBottom = object.y + (object.height || 20);
 
     return (
       object.x >= rect.x1 &&
       object.y >= rect.y1 &&
-      objectRight <= rect.x2 &&
-      objectBottom <= rect.y2
+      objRight <= rect.x2 &&
+      objBottom <= rect.y2
     );
   };
 
@@ -480,9 +508,10 @@ export default function MultiLayerCanvas() {
               onDragEnd={(e) => handleTextDragEnd(text.id, e)}
               // onDoubleClick={() => selectElement('text', text.id)}
               onUpdate={(id, newText) => handleTextUpdate(id, newText)}
-              isSelected={selection.type === 'text' && selection.id === text.id}
+              isSelected={selectedObjects.some(obj => obj.id === text.id && obj.type === 'text')}
               onSelect={selectElement}
               saveHistory={saveHistory}
+              
             />
           </Layer>
         ))}
