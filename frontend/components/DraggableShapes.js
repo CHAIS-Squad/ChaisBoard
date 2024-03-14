@@ -12,26 +12,6 @@ export default function DraggableShapes({
   const transformerRef = useRef(null);
   const layerRef = useRef(null);
 
-  // useEffect(() => {
-  //   if (transformerRef.current) {
-  //     if (selection.id) {
-  //       // Attempt to find the selected node using the selection.id
-  //       const selectedNode = transformerRef.current.getStage().findOne(`#${selection.id}`);
-  //       // Ensure selectedNode is defined before attempting to use it
-  //       if (selectedNode) {
-  //         transformerRef.current.nodes([selectedNode]);
-  //       } else {
-  //         // If no node was found, clear the transformer's nodes array
-  //         transformerRef.current.nodes([]);
-  //       }
-  //     } else {
-  //       // If there's no selection, also clear the transformer's nodes array
-  //       transformerRef.current.nodes([]);
-  //     }
-  //     transformerRef.current.getLayer().batchDraw();
-  //   }
-  // }, [selection, shapes]);
-
   useEffect(() => {
     // Check if the transformer exists
     if (transformerRef.current) {

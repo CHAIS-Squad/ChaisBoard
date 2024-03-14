@@ -95,7 +95,6 @@ export default function TextEditor({
       transformerRef.current.getLayer().batchDraw();
     }
   }, [isSelected]);
-  
 
   // Handle resize and transform end
   const handleTransformEnd = () => {
@@ -133,14 +132,15 @@ export default function TextEditor({
   return (
     <Group>
       <Text
+        id={id}
         x={position.x}
         y={position.y}
         text={!editing ? editingText : ''}
         fontSize={fontSize}
         fill={color}
         draggable={!editing}
-        onDragStart={onDragStart}
-        onDragEnd={onDragEnd}
+        onDragStart={(e) => onDragStart(id, e)}
+        onDragEnd={(e) => onDragEnd(id, e)}
         onClick={handleTextClick}
         onDblClick={handleDoubleClick}
         ref={textRef}

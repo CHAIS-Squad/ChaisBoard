@@ -191,39 +191,60 @@ export default function MultiLayerCanvas() {
     saveHistory();
   };
 
-  const handleTextDragStart = (textId) => {
-    const updatedTexts = texts.map((text) => {
-      if (text.id === textId) {
-        return { ...text, isDragging: true };
-      }
-      return text;
-    });
-    setTexts(updatedTexts);
-  };
+  const handleTextDragStart = (e) => {
+    // Safely attempt to get 'id' from the Konva node
+    const draggedTextId = e.target?.attrs?.id || e.target?.id();
 
-  const handleTextDragEnd = (textId, e) => {
-    // Ensure e.target is defined and has .x() and .y() methods
-    if (
-      e.target &&
-      typeof e.target.x === 'function' &&
-      typeof e.target.y === 'function'
-    ) {
-      const updatedTexts = texts.map((text) => {
-        if (text.id === textId) {
-          // Use e.target.x() and e.target.y() to get the new position
-          return {
-            ...text,
-            position: { x: e.target.x(), y: e.target.y() },
-            isDragging: false,
-          };
+    if (!draggedTextId) {
+        console.error("Failed to identify dragged text id");
+        return;
+    }
+
+    // Record the start position
+    const startPos = { x: e.target.x(), y: e.target.y() };
+    // Assuming you're setting startPos for later, ensure e.target is a Konva Node
+    if(e.target.nodeType === 'Shape') {
+        e.target.setAttr('startPos', startPos);
+    }
+
+    const updatedTexts = texts.map((text) => {
+        if (selectedObjects.find(obj => obj.id === text.id)) {
+            return { ...text, isDragging: true };
         }
         return text;
-      });
-      setTexts(updatedTexts);
-    } else {
-      console.error('Unexpected event target:', e.target);
-    }
-  };
+    });
+    setTexts(updatedTexts);
+};
+
+  
+
+const handleTextDragEnd = (e) => {
+  // Safely attempt to get 'id' and 'startPos'
+  const draggedTextId = e.target?.attrs?.id || e.target?.id();
+  const startPos = e.target?.getAttr('startPos');
+
+  if (!startPos || !draggedTextId) {
+      console.error("Failed to get drag start position or text id");
+      return;
+  }
+
+  const deltaX = e.target.x() - startPos.x;
+  const deltaY = e.target.y() - startPos.y;
+
+  const updatedTexts = texts.map((text) => {
+      if (selectedObjects.find(obj => obj.id === text.id)) {
+          return {
+              ...text,
+              position: { x: text.position.x + deltaX, y: text.position.y + deltaY },
+              isDragging: false,
+          };
+      }
+      return text;
+  });
+  setTexts(updatedTexts);
+};
+
+  
 
   const handleTextDoubleClick = (textId) => {
     const updatedTexts = texts.map((text) => {
@@ -254,6 +275,7 @@ export default function MultiLayerCanvas() {
   };
 
   const addText = () => {
+    const newTextId = `text-${texts.length}`;
     const newText = {
       id: `text-${texts.length}`,
       position: { x: 300, y: texts.length * 20 + 100 },
