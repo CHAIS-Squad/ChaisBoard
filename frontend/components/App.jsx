@@ -15,7 +15,6 @@ export default function App() {
     <div style={{ display: 'flex' }}>
       <main style={{ flex: 1 }}>
         <MultiLayerCanvas />
-        <CodeEditor />
       </main>
     </div>
   );
