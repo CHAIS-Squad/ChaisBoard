@@ -119,7 +119,7 @@ function TemplatesToolbar({ importTemplate, exportTemplate }) {
         >
           <option value="select">Select Template</option>
           {user ? <option value="create">Create New</option> : null}
-          {publicTemplates.length &&
+          {publicTemplates &&
             publicTemplates.map((template) => {
               return (
                 <option
@@ -130,7 +130,7 @@ function TemplatesToolbar({ importTemplate, exportTemplate }) {
                 </option>
               );
             })}
-          {userTemplates.length &&
+          {userTemplates &&
             userTemplates.map((template) => {
               return (
                 <option
