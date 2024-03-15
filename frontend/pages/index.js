@@ -1,6 +1,7 @@
 'use client';
 import Head from 'next/head';
 import dynamic from 'next/dynamic';
+import { useTheme } from '@/contexts/theme';
 const MultiLayerCanvas = dynamic(
   () => import('../components/MultiLayerCanvas'),
   {
@@ -11,6 +12,8 @@ import CodeEditor from '@/components/CodeEditor';
 import App from '@/components/App';
 
 export default function Home() {
+  const { theme } = useTheme();
+
   return (
     <div>
       <Head>
@@ -24,6 +27,7 @@ export default function Home() {
           flexDirection: 'column',
           alignItems: 'center',
         }}
+        data-bs-theme={theme}
       >
         <App />
       </main>

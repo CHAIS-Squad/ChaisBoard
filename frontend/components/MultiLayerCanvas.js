@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { Stage, Layer, Text, Rect, Circle, Star, Arrow } from 'react-konva';
+import { useTheme } from '@/contexts/theme';
 import Draggable from 'react-draggable';
 import dynamic from 'next/dynamic';
 import Sidebar from './Sidebar';
@@ -32,6 +33,8 @@ export default function MultiLayerCanvas() {
   const [selectionRect, setSelectionRect] = useState(null); // {x, y, width, height}
   const [selectedObjects, setSelectedObjects] = useState([]); // Array of selected object IDs
   const [isSelectionMode, setIsSelectionMode] = useState(false);
+
+  const { theme } = useTheme();
 
   const toggleCodeEditor = () => setShowCodeEditor(!showCodeEditor);
   const toggleSelectionMode = () => setIsSelectionMode(!isSelectionMode);
@@ -459,7 +462,7 @@ export default function MultiLayerCanvas() {
   };
 
   return (
-    <>
+    <div className={`absolute inset-0 -z-10 h-full w-full [background-size:16px_16px] ${theme === 'light' ? 'bg-neutral-50 bg-[radial-gradient(#e5e7eb_1px,transparent_1px)]' : 'bg-neutral-900'}`}>
       <Sidebar
         selectedShape={selectedShape}
         setSelectedShape={setSelectedShape}
@@ -545,6 +548,6 @@ export default function MultiLayerCanvas() {
           </div>
         </Draggable>
       </div>
-    </>
+    </div>
   );
 }
