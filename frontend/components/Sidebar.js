@@ -1,7 +1,8 @@
 import ColorPickerModal from './ColorPickerModal';
 import TemplatesToolbar from './TemplatesToolbar';
 import UserManager from './UserManager';
-import { Button, Dropdown, DropdownButton } from 'react-bootstrap';
+import { Button, ButtonGroup, Dropdown, DropdownButton } from 'react-bootstrap';
+import { useState } from 'react';
 
 const IconStar = () => (
   <svg
@@ -57,7 +58,7 @@ const IconRightArrow = () => (
   </svg>
 );
 
-const Sidebar = ({
+function Sidebar({
   selectedShape,
   setSelectedShape,
   addShape,
@@ -71,7 +72,34 @@ const Sidebar = ({
   clearCanvas,
   onToggleCodeEditor,
   showCodeEditor,
-}) => {
+  isSelectionMode,
+  onToggleSelectionMode,
+}) {
+  const [selectedShapeIcon, setSelectedShapeIcon] = useState(IconRectangle);
+
+  function updateSelectedShape(eventKey) {
+    setSelectedShape(eventKey);
+    switch (eventKey) {
+      case 'Star':
+        setSelectedShapeIcon(IconStar);
+        break;
+      case 'Circle':
+        setSelectedShapeIcon(IconCircle);
+        break;
+      case 'Rect':
+        setSelectedShapeIcon(IconRectangle);
+        break;
+      case 'LeftArrow':
+        setSelectedShapeIcon(IconLeftArrow);
+        break;
+      case 'RightArrow':
+        setSelectedShapeIcon(IconRightArrow);
+        break;
+      default:
+        setSelectedShapeIcon(IconRectangle);
+    }
+  }
+
   return (
     <div
       style={{
@@ -87,30 +115,34 @@ const Sidebar = ({
         zIndex: 1000,
       }}
     >
-      <DropdownButton
-        id='shape-selector'
-        title='Select Shape'
-        onSelect={setSelectedShape}
-        variant='outline-secondary'
-        size='sm'
-        className='mb-2'
-      >
-        <Dropdown.Item eventKey='Star'>
-          <IconStar />{' '}
-        </Dropdown.Item>
-        <Dropdown.Item eventKey='Circle'>
-          <IconCircle />{' '}
-        </Dropdown.Item>
-        <Dropdown.Item eventKey='Rect'>
-          <IconRectangle />{' '}
-        </Dropdown.Item>
-        <Dropdown.Item eventKey='LeftArrow'>
-          <IconLeftArrow />{' '}
-        </Dropdown.Item>
-        <Dropdown.Item eventKey='RightArrow'>
-          <IconRightArrow />{' '}
-        </Dropdown.Item>
-      </DropdownButton>
+      <ButtonGroup className='mb-2'>
+        <DropdownButton
+          id='shape-selector'
+          title='Select Shape'
+          onSelect={updateSelectedShape}
+          variant='outline-secondary'
+          size='sm'
+        >
+          <Dropdown.Item eventKey='Star'>
+            <IconStar />{' '}
+          </Dropdown.Item>
+          <Dropdown.Item eventKey='Circle'>
+            <IconCircle />{' '}
+          </Dropdown.Item>
+          <Dropdown.Item eventKey='Rect'>
+            <IconRectangle />{' '}
+          </Dropdown.Item>
+          <Dropdown.Item eventKey='LeftArrow'>
+            <IconLeftArrow />{' '}
+          </Dropdown.Item>
+          <Dropdown.Item eventKey='RightArrow'>
+            <IconRightArrow />{' '}
+          </Dropdown.Item>
+        </DropdownButton>
+        <Button disabled variant='secondary' size='sm'>
+          {selectedShapeIcon}
+        </Button>
+      </ButtonGroup>
 
       <Button
         onClick={addShape}
@@ -157,6 +189,16 @@ const Sidebar = ({
         {showCodeEditor ? 'Hide Code Editor' : 'Show Code Editor'}
       </Button>
       <Button
+        onClick={onToggleSelectionMode}
+        variant='outline-secondary'
+        size='sm'
+        className='mb-2'
+      >
+        {isSelectionMode
+          ? 'Switch to Drawing Mode'
+          : 'Switch to Selection Mode'}
+      </Button>
+      <Button
         onClick={clearCanvas}
         variant='outline-danger'
         size='sm'
@@ -173,6 +215,6 @@ const Sidebar = ({
       <UserManager />
     </div>
   );
-};
+}
 
 export default Sidebar;
